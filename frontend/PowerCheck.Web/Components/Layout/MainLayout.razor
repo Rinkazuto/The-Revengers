@@ -1,13 +1,13 @@
 ﻿@inherits LayoutComponentBase
 
-<MudThemeProvider />
+<MudThemeProvider Theme="_theme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
     <MudAppBar Elevation="1" Dense="true">
-        <MudText Typo="Typo.h6">Power Check</MudText>
+        <MudText Typo="Typo.h6">ReVolt</MudText>
     </MudAppBar>
 
     <MudMainContent Class="page-content">
@@ -29,3 +29,15 @@
         </NavLink>
     </MudAppBar>
 </MudLayout>
+
+@code {
+    // ReVolt colours (decision log #7: green logo). Replace with the designer's exact green.
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#2E7D32",
+            AppbarBackground = "#2E7D32",
+        }
+    };
+}

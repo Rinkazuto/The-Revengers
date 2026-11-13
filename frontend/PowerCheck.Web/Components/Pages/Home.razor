@@ -1,6 +1,200 @@
 ﻿@page "/"
+@using System.Globalization
+@inject IPowerCheckApi Api
+@inject CalculationState State
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
 
-<PageTitle>Bill: Power Check</PageTitle>
+<PageTitle>Bill: ReVolt</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">Bill calculator</MudText>
-<MudText>Enter your monthly kWh to see your CEB bill. Coming soon.</MudText>
+@if (_bill is null)
+{
+    @* ---------- INPUT (wireframe: "Calculate bill", screen 1) ---------- *@
+    <MudText Typo="Typo.h5">Your bill</MudText>
+    <MudText Typo="Typo.body2" Class="mb-4">Find this on your CEB bill</MudText>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudNumericField T="decimal?" @bind-Value="_kwh"
+                 Label="Units used this month"
+                 Adornment="Adornment.End" AdornmentText="kWh"
+                 HideSpinButtons="true"
+                 InputMode="InputMode.numeric"
+                 Variant="Variant.Outlined" />
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudSelect T="string" @bind-Value="_tariffCode" Label="Your CEB tariff"
+                   Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+            @foreach (var tariff in Tariffs)
+            {
+                <MudSelectItem T="string" Value="@tariff.Code">@tariff.Label</MudSelectItem>
+            }
+        </MudSelect>
+        <MudText Typo="Typo.caption">The tariff code is printed on your CEB bill. Not sure? Keep 110.</MudText>
+    </MudPaper>
+
+    @if (_error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+    }
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
+               Class="tap-48" Disabled="_loading" OnClick="CalculateAsync">
+        @if (_loading)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+            <span>Calculating…</span>
+        }
+        else
+        {
+            <span>Calculate bill</span>
+        }
+    </MudButton>
+}
+else
+{
+    @* ---------- RESULT (wireframe: "Calculate bill", screen 2) ---------- *@
+    <MudText Typo="Typo.h4">Rs @Rs(_bill.TotalRs) / month</MudText>
+    <MudText Typo="Typo.body2" Class="mb-4">For @Kwh(_bill.MonthlyKwh) kWh · Tariff @_tariffCode</MudText>
+
+    <MudPaper Class="pa-4 mb-2" Elevation="1">
+        @foreach (var line in _bill.Lines)
+        {
+            <div class="band-row">
+                <div class="d-flex justify-space-between">
+                    <MudText>@BandLabel(line)</MudText>
+                    <MudText><b>Rs @Rs(line.AmountRs)</b></MudText>
+                </div>
+                <MudProgressLinear Value="@Share(line.AmountRs)" Color="Color.Primary" Rounded="true" Size="Size.Large" />
+                <MudText Typo="Typo.caption">@Kwh(line.Kwh) kWh × Rs @Rs(line.PricePerKwh)</MudText>
+            </div>
+        }
+
+        @if (MinimumApplies)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true">
+                Your usage is low, so CEB's minimum charge of Rs @Rs(_bill.MinimumChargeRs) applies.
+            </MudAlert>
+        }
+    </MudPaper>
+
+    <MudText Typo="Typo.body2" Class="mb-1">Higher bands cost more per kWh.</MudText>
+    <MudText Typo="Typo.caption" Class="d-block mb-4">Source: @_bill.Source. Consumption charge only.</MudText>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
+               Class="tap-48 mb-2" OnClick="GoToSolar">
+        See solar savings
+    </MudButton>
+
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true"
+               Class="tap-48 mb-2" Disabled="_saving" OnClick="SaveReadingAsync">
+        @(_saving ? "Saving…" : $"Save this reading ({MonthLabel})")
+    </MudButton>
+
+    <MudButton Variant="Variant.Text" FullWidth="true" Class="tap-48" OnClick="StartOver">
+        Change kWh or tariff
+    </MudButton>
+}
+
+@code {
+    private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+
+    // Codes from the agreed contract. Ask the Data Lead for plain-word names for 120 and 140.
+    private static readonly (string Code, string Label)[] Tariffs =
+    [
+        ("110", "Tariff 110 (domestic)"),
+        ("110A", "Tariff 110A (Social Register or low use)"),
+        ("120", "Tariff 120"),
+        ("140", "Tariff 140"),
+    ];
+
+    private decimal? _kwh;
+    private string _tariffCode = "110";
+    private BillResponse? _bill;
+    private bool _loading;
+    private bool _saving;
+    private string? _error;
+
+    protected override void OnInitialized()
+    {
+        // Coming back to the Bill tab: show the last result again
+        if (State.LastBill is not null)
+        {
+            _bill = State.LastBill;
+            _kwh = State.MonthlyKwh;
+            _tariffCode = State.TariffCode ?? "110";
+        }
+    }
+
+    private async Task CalculateAsync()
+    {
+        _error = null;
+        if (_kwh is null) { _error = "Enter the units (kWh) from your CEB bill."; return; }
+        if (_kwh < 0 || _kwh > 5000) { _error = "Enter a number between 0 and 5000 kWh."; return; }
+
+        _loading = true;
+        try
+        {
+            _bill = await Api.CalculateBillAsync(new BillRequest(_kwh.Value, _tariffCode));
+
+            // Remember it for the Solar screen and "Save this reading"
+            State.MonthlyKwh = _kwh;
+            State.TariffCode = _tariffCode;
+            State.LastBill = _bill;
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void GoToSolar() => Nav.NavigateTo("solar");
+
+    private async Task SaveReadingAsync()
+    {
+        _saving = true;
+        try
+        {
+            var month = DateTime.Now.ToString("yyyy-MM", Inv);   // e.g. "2026-11"
+            await Api.SaveReadingAsync(new ReadingRequest(month, _bill!.MonthlyKwh));
+            Snackbar.Add($"Saved your reading for {MonthLabel}.", Severity.Success);
+        }
+        catch (ApiException ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void StartOver()
+    {
+        // Back to the input. Keep the kWh and tariff so the user only changes what they need.
+        _bill = null;
+        State.LastBill = null;
+    }
+
+    private static string MonthLabel => DateTime.Now.ToString("MMMM yyyy", Inv);   // "November 2026"
+
+    private bool MinimumApplies =>
+        _bill is not null && _bill.Lines.Sum(l => l.AmountRs) < _bill.MinimumChargeRs;
+
+    private double Share(decimal amount) =>
+        _bill is null || _bill.TotalRs == 0 ? 0 : (double)(amount / _bill.TotalRs * 100);
+
+    // Money always with 2 decimals (contract rule), e.g. 1,216.75
+    private static string Rs(decimal value) => value.ToString("N2", Inv);
+
+    private static string Kwh(decimal value) => value.ToString("0.##", Inv);
+
+    private static string BandLabel(BillLineDto line) =>
+        line.ToKwh is null
+            ? $"Above {Kwh(line.FromKwh)} kWh"
+            : $"{Kwh(line.FromKwh)}–{Kwh(line.ToKwh.Value)} kWh";
+}
