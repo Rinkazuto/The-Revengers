@@ -45,8 +45,9 @@ public static class Seeder
                 EffectiveFrom = Date(r["effective_from"]),
             }));
 
-        if (!db.SolarSchemeParameters.Any())
-            db.SolarSchemeParameters.AddRange(Read(seedFolder, "solar_scheme_2026.csv", r => new SolarSchemeParameter
+        // Adds any parameter missing from the database, so a new CSV row reaches old app.db files too.
+        var knownParameters = db.SolarSchemeParameters.Select(p => p.Parameter).ToHashSet();
+        db.SolarSchemeParameters.AddRange(Read(seedFolder, "solar_scheme_2026.csv", r => new SolarSchemeParameter
             {
                 Parameter = r["parameter"],
                 Value = Dec(r["value"]),
@@ -54,7 +55,7 @@ public static class Seeder
                 AppliesTo = r["applies_to"],
                 Source = r["source"],
                 SourcePage = r["source_page"] == "" ? null : int.Parse(r["source_page"], CultureInfo.InvariantCulture),
-            }));
+            }).Where(p => !knownParameters.Contains(p.Parameter)));
 
         if (!db.SolarSystemPrices.Any())
             db.SolarSystemPrices.AddRange(Read(seedFolder, "solar_system_prices_2026.csv", r => new SolarSystemPrice

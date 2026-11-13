@@ -79,6 +79,7 @@ public class TariffData(AppDbContext db)
             BatteryRequiredAboveKwac: p["battery_required_above"],
             NetworkSurveyRequiredAboveKwac: p["network_survey_required_above"],
             MaxInstallationKw: p["max_installation_capacity"],
+            ContractTermYears: (int)p["contract_term_years"],
             SystemPrices: prices,
             Source: "CEB Household Rooftop Solar PV Scheme leaflet (July 2026); CEB solar price guide; PVGIS 5.3, European Commission JRC");
     }
@@ -106,5 +107,6 @@ public record SolarSchemeSnapshot(
     decimal BatteryRequiredAboveKwac,
     decimal NetworkSurveyRequiredAboveKwac,
     decimal MaxInstallationKw,
+    int ContractTermYears,             // years the CEB credits solar output (leaflet page 8)
     List<SystemPriceDto> SystemPrices,
     string Source);
