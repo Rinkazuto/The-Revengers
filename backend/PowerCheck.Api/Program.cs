@@ -22,4 +22,5 @@ app.UseCors();
 // Quick check that the API is alive
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
+app.MapBillEndpoints();
 app.Run(); 
