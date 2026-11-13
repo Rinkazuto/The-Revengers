@@ -13,7 +13,7 @@
 | Base URL (local) | `http://localhost:5012` |
 | Prefix | All endpoints start with `/api` |
 | Format | JSON, property names in `camelCase` |
-| Money | Mauritian rupees (`Rs`), decimal, rounded to 2 places |
+| Money | Mauritian rupees (`Rs`), decimal, rounded to 2 places. **Frontend: always display with `F2`** (e.g. `value.ToString("F2")`), because SQLite returns `12.8` for `12.80`. |
 | Energy | kWh, decimal |
 | Month | String `"YYYY-MM"`, e.g. `"2026-10"` |
 | Tariff code | Optional everywhere. `110` (default), `110A`, `120` or `140`. Unknown code → 400 (404 on GET /api/tariffs). |
@@ -63,8 +63,10 @@ The CEB domestic price bands in force today, from the database. `tariffCode` is 
   "minimumChargeRs": 0.00
 }
 ```
-- `toKwh: null` means "and above".
-- Bands are sorted by `fromKwh`. The newest `effective_from` in force today wins.
+- Bands are **0-based**: 0–25, 25–50, 50–75… A band covers usage above `fromKwh` up to `toKwh`.
+- `toKwh: null` means "and above" (the top band).
+- Bands are sorted by `fromKwh`.
+- When a tariff has prices with two dates (e.g. 2023 and 2026), **the newest one in force today wins**.
 
 ---
 
@@ -111,7 +113,7 @@ Compare **without solar vs with solar** under the 2026 CEB solar scheme.
 | Field | Rule |
 |---|---|
 | `monthlyKwh` | Required, 0 to 5000 |
-| `systemSizeKwp` | Optional; if missing, use the scheme's default size. Must be > 0 and ≤ the scheme maximum. |
+| `systemSizeKwp` | Optional. Must be a **CEB price-guide size**: 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7.5, 10 or 15. Any other value → 400. If it's left out, the backend picks **the smallest size whose average output covers the usage** (or 15 if none does). |
 | `tariffCode` | Optional, default `110` |
 
 **Response 200**
@@ -131,9 +133,12 @@ Compare **without solar vs with solar** under the 2026 CEB solar scheme.
   "paybackYears": 0.0,
   "source": "CEB Household Rooftop Solar PV Scheme leaflet (July 2026); CEB solar price guide; PVGIS 5.3, European Commission JRC",
   "assumptions": [
-    "Solar output: 113.71 kWh per kWp per month (PVGIS, European Commission JRC).",
-    "Install cost of Rs X per kWp",
-    "Exported kWh credited at Rs Y each"
+    "Solar output: 113.71 kWh per kWp per month on average, higher in summer and lower in winter (PVGIS, European Commission JRC).",
+    "System price: Rs X to Rs Y for 3 kWp with a 5 kWh battery (CEB estimate, indicative only). We use the middle: Rs Z.",
+    "Government grant: 25% of the cost, up to Rs 75,000 (eligible households). Processing fee: Rs 2,000.",
+    "Net metering: extra solar energy is credited at Rs 3.00 per kWh. CST charge at your usage: Rs 0.00 per kWh of energy offset.",
+    "Panels lose 0.5% of their output each year (CEB estimate).",
+    "Bills use CEB domestic tariff 110, in force from 1 May 2026."
   ],
   "projection": [
     { "year": 1, "cumulativeSavingsRs": 0.00, "netGainRs": 0.00 },
@@ -142,10 +147,15 @@ Compare **without solar vs with solar** under the 2026 CEB solar scheme.
 }
 ```
 - `withoutSolar.monthlyBillRs` must equal `totalRs` from `/api/bill/calculate` for the same kWh and tariff. **QA test case.**
-- `withSolar.monthlyBillRs` = bill for `kwhFromGrid` minus credit for exported kWh, never below 0.
-- `paybackYears` = `installCostRs / yearlySavingsRs`, 1 decimal. If savings are 0 or negative it is `null`, and the UI shows "Solar doesn't pay back at this usage".
-- `projection` is one row per year for the graph: `cumulativeSavingsRs` = yearly savings × year, `netGainRs` = that minus `installCostRs` (negative until payback).
-- `assumptions` is shown on screen under the result, so users and judges can see where the numbers come from.
+- **Year 1 is worked out month by month** with the 12 PVGIS monthly outputs (more sun in summer, less in winter). Each month: bill for the kWh still bought from CEB, **plus** the CST charge on the kWh covered by solar, **minus** Rs 3.00 per kWh of extra solar sent to CEB (net metering). A month's bill is never below 0.
+- CST charge per kWh covered by solar depends on monthly usage: Rs 0.00 up to 500 kWh, Rs 0.82 for 501–1000 kWh, Rs 1.63 above 1000 kWh.
+- `withSolar.monthlyBillRs` = year-1 bill ÷ 12. `monthlyGenerationKwh` = size × 113.71 (the average month). `kwhFromGrid` = year-1 kWh bought from CEB ÷ 12.
+- `monthlySavingsRs` = `withoutSolar.monthlyBillRs` − `withSolar.monthlyBillRs`. `yearlySavingsRs` = without-solar bill × 12 − year-1 bill with solar.
+- `installCostRs` = middle of CEB's price range for that size, **minus the 25% government grant (capped at Rs 75,000), plus the Rs 2,000 processing fee**.
+- `paybackYears` = when the total savings reach `installCostRs`, 1 decimal. Panels lose 0.5% of their output each year, so later years save slightly less. If it doesn't pay back within 30 years it is `null`, and the UI shows "Solar doesn't pay back at this usage".
+- `projection` is 20 rows (the 20-year CEB contract), one per year, for the graph: `cumulativeSavingsRs` = total saved by the end of that year, `netGainRs` = that minus `installCostRs` (negative until payback).
+- `assumptions` lists every figure used and its source. It is shown on screen under the result, so users and judges can see where the numbers come from.
+- All rates (grant, cap, fee, CST, export credit, degradation, prices, monthly output) come from `data/seed/`. None are typed into the code.
 
 ---
 
@@ -229,10 +239,26 @@ public record ReadingsResponse(List<ReadingDto> Readings, string? Trend);
 | 5 | Readings without login | One shared list for the demo. |
 | 6 | Keep the `/api` prefix? | Yes. |
 
+## Changes since the first draft
+
+| # | Change | Where | Status |
+|---|---|---|---|
+| 1 | `fixedChargeRs` → `minimumChargeRs`. The total is the band total or the minimum, whichever is higher. | Tariffs + bill responses | ✅ Merged |
+| 2 | New optional `tariffCode` (default `"110"`) | Bill + solar requests, `GET /api/tariffs?tariffCode=` | ✅ Merged |
+| 3 | New `tariffCode` field in the tariffs response | `GET /api/tariffs` | ✅ Merged |
+| 4 | New `projection` list (`year`, `cumulativeSavingsRs`, `netGainRs`) for the graph | Solar response | ✅ Merged |
+| 5 | Bands are 0-based (0–25, 25–50…) and `toKwh` is `null` for the top band | Tariffs + bill | ✅ Agreed with the Data Lead |
+| 6 | When a tariff has two dates, the newest one wins | Tariffs + bill | ✅ Agreed |
+| 7 | Unknown `tariffCode` → 404 on `GET /api/tariffs`, 400 on POST | All | ✅ Merged |
+| 8 | `systemSizeKwp` must be a CEB price-guide size; if left out, the backend picks the smallest size that covers the usage | Solar request | ✅ Merged (#66) |
+| 9 | `installCostRs` is after the 25% grant (capped at Rs 75,000), plus the Rs 2,000 fee | Solar response | ✅ Merged (#66) |
+| 10 | Frontend shows money with 2 decimals (`F2`) | Frontend | ✅ Agreed (Data Lead) |
+| 11 | Solar uses real data: monthly PVGIS output, net metering credit, CST charge, panel ageing; payback counted year by year | Solar response | ✅ Merged (#66) |
+
 ## Known gaps (to fix before the demo)
 
 | Gap | Owner |
 |---|---|
-| `/api/solar/estimate` and the `billRs` in readings still use `FakeSolarData` / `FakeTariffData`. Switch them to `TariffData`, then delete the Fake files. | Backend Lead |
-| `/api/solar/estimate` doesn't use `tariffCode` yet (it only checks it). | Backend Lead |
+| The `billRs` in readings still uses `FakeTariffData`. Switch it to `TariffData`, then delete `FakeTariffData.cs` and `FakeSolarData.cs`. | Backend Lead |
 | Readings are kept in memory (`ReadingStore`), so they're lost on restart. Move them to the `Readings` table. | Backend Lead + Data Lead |
+| The website still uses fake data: `"UseMockApi": true` in `frontend/PowerCheck.Web/appsettings.json`. Set it to `false` and test every page against the real API before the demo. | Frontend Lead |
