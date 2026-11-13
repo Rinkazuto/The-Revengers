@@ -2,13 +2,13 @@
 // Owned by the Integrator. Change only through a PR.
 
 public record TariffBandDto(decimal FromKwh, decimal? ToKwh, decimal PricePerKwh);
-public record TariffsResponse(string Source, string SourceUrl, List<TariffBandDto> Bands, decimal FixedChargeRs);
+public record TariffsResponse(string TariffCode, string Source, string SourceUrl, List<TariffBandDto> Bands, decimal MinimumChargeRs);
 
-public record BillRequest(decimal MonthlyKwh);
+public record BillRequest(decimal MonthlyKwh, string? TariffCode = null);
 public record BillLineDto(decimal FromKwh, decimal? ToKwh, decimal Kwh, decimal PricePerKwh, decimal AmountRs);
-public record BillResponse(decimal MonthlyKwh, List<BillLineDto> Lines, decimal FixedChargeRs, decimal TotalRs, string Source);
+public record BillResponse(decimal MonthlyKwh, List<BillLineDto> Lines, decimal MinimumChargeRs, decimal TotalRs, string Source);
 
-public record SolarRequest(decimal MonthlyKwh, decimal? SystemSizeKwp);
+public record SolarRequest(decimal MonthlyKwh, decimal? SystemSizeKwp, string? TariffCode = null);
 public record WithoutSolarDto(decimal MonthlyBillRs);
 public record WithSolarDto(decimal MonthlyGenerationKwh, decimal KwhFromGrid, decimal MonthlyBillRs);
 public record ProjectionYearDto(int Year, decimal CumulativeSavingsRs, decimal NetGainRs);

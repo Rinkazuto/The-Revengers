@@ -6,10 +6,10 @@ public static class SolarCalculator
     {
         // 1. Bill WITHOUT solar (same maths as /api/bill/calculate, so the numbers always match)
         var billWithout = BillCalculator.Calculate(
-            monthlyKwh, FakeTariffData.Bands, FakeTariffData.FixedChargeRs, FakeTariffData.Source).TotalRs;
+            monthlyKwh, FakeTariffData.Bands, FakeTariffData.MinimumChargeRs, FakeTariffData.Source).TotalRs;
 
         // 2. How much the panels produce in a month
-        var generation = systemSizeKwp * FakeSolarData.KwhPerKwpPerMonth;
+        var generation = Math.Round(systemSizeKwp * FakeSolarData.KwhPerKwpPerMonth, 2, MidpointRounding.AwayFromZero);
 
         // 3. What you still need from the CEB grid, and the extra you send back
         var kwhFromGrid = Math.Max(0, monthlyKwh - generation);
@@ -17,7 +17,7 @@ public static class SolarCalculator
 
         // 4. Bill WITH solar = bill for grid kWh, minus credit for exported kWh (never below 0)
         var gridBill = BillCalculator.Calculate(
-            kwhFromGrid, FakeTariffData.Bands, FakeTariffData.FixedChargeRs, FakeTariffData.Source).TotalRs;
+            kwhFromGrid, FakeTariffData.Bands, FakeTariffData.MinimumChargeRs, FakeTariffData.Source).TotalRs;
         var billWith = BillCalculator.Round(Math.Max(0, gridBill - kwhExported * FakeSolarData.ExportCreditPerKwhRs));
 
         // 5. Savings, cost and payback
@@ -40,7 +40,7 @@ public static class SolarCalculator
         // 7. Explain where the numbers come from (shown on screen)
         var assumptions = new List<string>
         {
-            $"Generation of {FakeSolarData.KwhPerKwpPerMonth} kWh per kWp per month",
+            $"Solar output: {FakeSolarData.KwhPerKwpPerMonth} kWh per kWp per month (PVGIS, European Commission JRC).",
             $"Install cost of Rs {FakeSolarData.InstallCostPerKwpRs:N0} per kWp",
             $"Exported kWh credited at Rs {FakeSolarData.ExportCreditPerKwhRs} each",
         };
