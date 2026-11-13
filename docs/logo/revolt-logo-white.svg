@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100" width="900" height="300"><title>ReVolt logo</title><g transform="translate(4,8) scale(0.646)"><rect width="130" height="130" rx="28" fill="#2E9E4F"/><g transform="translate(7,8)">
+<circle cx="97" cy="22" r="12" fill="#F7C61A"/>
+<polygon points="18.7,53.5 42.7,32.6 36.1,25.1 12.1,46" fill="#F7C61A" stroke="#F7C61A" stroke-width="2" stroke-linejoin="round"/>
+<line x1="30.7" y1="43" x2="24.1" y2="35.5" stroke="#FFFFFF" stroke-width="2"/>
+<path d="M12 66 L58 26 L104 66 M24 56 V108 H92 V56" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M62 62 L46 87 H58 L53 104 L72 78 H60 Z" fill="#F7C61A" stroke="#F7C61A" stroke-width="2" stroke-linejoin="round"/>
+</g></g>
+<text x="160" y="68" text-anchor="end" font-family="Calibri, Arial, sans-serif" font-weight="700" font-size="50" fill="#FFFFFF">Re</text>
+<polyline points="165.0,38.0 181.7,66.3 208.3,21.3" fill="none" stroke="#F7C61A" stroke-width="10.0" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="206.5" y="68" font-family="Calibri, Arial, sans-serif" font-weight="700" font-size="50" fill="#FFFFFF">olt</text>
+</svg>
