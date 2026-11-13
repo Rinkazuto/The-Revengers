@@ -1,0 +1,6 @@
+@PowerCheck.Api_HostAddress = http://localhost:5012
+
+GET {{PowerCheck.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
