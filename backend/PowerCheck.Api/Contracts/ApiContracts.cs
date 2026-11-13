@@ -11,9 +11,10 @@ public record BillResponse(decimal MonthlyKwh, List<BillLineDto> Lines, decimal 
 public record SolarRequest(decimal MonthlyKwh, decimal? SystemSizeKwp);
 public record WithoutSolarDto(decimal MonthlyBillRs);
 public record WithSolarDto(decimal MonthlyGenerationKwh, decimal KwhFromGrid, decimal MonthlyBillRs);
+public record ProjectionYearDto(int Year, decimal CumulativeSavingsRs, decimal NetGainRs);
 public record SolarResponse(decimal MonthlyKwh, decimal SystemSizeKwp, WithoutSolarDto WithoutSolar, WithSolarDto WithSolar,
     decimal MonthlySavingsRs, decimal YearlySavingsRs, decimal InstallCostRs, decimal? PaybackYears,
-    string Source, List<string> Assumptions);
+    string Source, List<string> Assumptions, List<ProjectionYearDto> Projection);
 
 public record ReadingRequest(string Month, decimal Kwh);
 public record ReadingDto(int Id, string Month, decimal Kwh, decimal BillRs);
