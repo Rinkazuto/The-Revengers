@@ -40,4 +40,5 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.MapBillEndpoints();
 app.MapSolarEndpoints();
+app.MapReadingEndpoints();
 app.Run(); 
