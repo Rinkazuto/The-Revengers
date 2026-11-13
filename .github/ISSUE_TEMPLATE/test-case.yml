@@ -1,0 +1,34 @@
+name: Test Case
+description: A test case for a feature
+title: "[Test] "
+labels: ["testing"]
+body:
+  - type: input
+    id: feature
+    attributes:
+      label: Feature under test
+      placeholder: "e.g. Bill calculator, #12"
+    validations:
+      required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: Input
+      placeholder: "e.g. 250 kWh / month, no solar"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      placeholder: "e.g. Bill = Rs ... (worked out by hand from CEB tariff bands)"
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - Not run yet
+        - Pass
+        - Fail
