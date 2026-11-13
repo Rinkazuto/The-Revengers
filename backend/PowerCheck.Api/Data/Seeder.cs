@@ -75,6 +75,40 @@ public static class Seeder
                 SdMKwh = Dec(r["sd_m_kwh"]),
             }));
 
+        // Prosumer tariffs 150A and 150B (homes with solar). These tables are new in the
+        // AddProsumerTariffs migration, so they start empty in old app.db files too.
+        if (!db.ProsumerTariffs.Any())
+            db.ProsumerTariffs.AddRange(Read(seedFolder, "prosumer_tariffs.csv", r => new ProsumerTariff
+            {
+                TariffCode = r["tariff_code"],
+                EffectiveFrom = Date(r["effective_from"]),
+                Phase = r["phase"],
+                FlatRateMaxTotalKwh = r["flat_rate_max_total_kwh"] == "" ? null : Dec(r["flat_rate_max_total_kwh"]),
+                FlatRateRsPerKwh = r["flat_rate_rs_per_kwh"] == "" ? null : Dec(r["flat_rate_rs_per_kwh"]),
+                SourcePage = int.Parse(r["source_page"], CultureInfo.InvariantCulture),
+            }));
+
+        if (!db.ProsumerTariffBands.Any())
+            db.ProsumerTariffBands.AddRange(Read(seedFolder, "prosumer_tariff_bands.csv", r => new ProsumerTariffBand
+            {
+                TariffCode = r["tariff_code"],
+                EffectiveFrom = Date(r["effective_from"]),
+                Tier = int.Parse(r["tier"], CultureInfo.InvariantCulture),
+                // Same 0-based rule as tariff_tiers.csv: the Gazette's "Initial 500 kWh" (1 to 500) is stored as 0 to 500.
+                FromKwh = int.Parse(r["from_kwh"], CultureInfo.InvariantCulture) - 1,
+                ToKwh = r["to_kwh"] == "" ? null : int.Parse(r["to_kwh"], CultureInfo.InvariantCulture),
+                RateRsPerKwh = Dec(r["rate_rs_per_kwh"]),
+            }));
+
+        if (!db.ProsumerMinimumCharges.Any())
+            db.ProsumerMinimumCharges.AddRange(Read(seedFolder, "prosumer_minimum_charges.csv", r => new ProsumerMinimumCharge
+            {
+                TariffCode = r["tariff_code"],
+                EffectiveFrom = Date(r["effective_from"]),
+                MaxTotalKwh = r["max_total_kwh"] == "" ? null : Dec(r["max_total_kwh"]),
+                MinimumRs = Dec(r["minimum_rs"]),
+            }));
+
         db.SaveChanges();
     }
 
