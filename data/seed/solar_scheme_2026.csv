@@ -13,3 +13,4 @@ network_survey_required_above,10,kWac,all systems,"CEB Household Rooftop Solar P
 max_installation_capacity,50,kW,all systems,"CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",5
 max_export_per_phase,5,kWac,all systems,"CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",1
 annual_panel_degradation,0.5,percent per year,CEB calculator estimate,"CEB Solar PV Comparison page, ceb.mu/pv_calculator",
+contract_term_years,20,years,every prosumer contract,"CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",8
