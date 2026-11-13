@@ -18,6 +18,9 @@ public static class SolarEndpoints
             if (request.SystemSizeKwp is <= 0 || request.SystemSizeKwp > FakeSolarData.MaxSystemKwp)
                 errors["systemSizeKwp"] = new[] { $"systemSizeKwp must be more than 0 and at most {FakeSolarData.MaxSystemKwp}." };
 
+            if (!FakeTariffData.IsKnownTariff(request.TariffCode))
+                errors["tariffCode"] = new[] { $"Unknown tariffCode '{request.TariffCode}'." };
+
             if (errors.Count > 0)
                 return Results.ValidationProblem(errors);
 
