@@ -69,6 +69,100 @@ namespace PowerCheck.Api.Data.Migrations
                     b.ToTable("MinimumCharges");
                 });
 
+            modelBuilder.Entity("PowerCheck.Api.Models.ProsumerMinimumCharge", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("MaxTotalKwh")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("MinimumRs")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TariffCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TariffCode", "EffectiveFrom", "MaxTotalKwh")
+                        .IsUnique();
+
+                    b.ToTable("ProsumerMinimumCharges");
+                });
+
+            modelBuilder.Entity("PowerCheck.Api.Models.ProsumerTariff", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("FlatRateMaxTotalKwh")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("FlatRateRsPerKwh")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phase")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SourcePage")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TariffCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TariffCode", "EffectiveFrom")
+                        .IsUnique();
+
+                    b.ToTable("ProsumerTariffs");
+                });
+
+            modelBuilder.Entity("PowerCheck.Api.Models.ProsumerTariffBand", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FromKwh")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("RateRsPerKwh")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TariffCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Tier")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ToKwh")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TariffCode", "EffectiveFrom", "Tier")
+                        .IsUnique();
+
+                    b.ToTable("ProsumerTariffBands");
+                });
+
             modelBuilder.Entity("PowerCheck.Api.Models.PvgisMonthlyYield", b =>
                 {
                     b.Property<int>("Id")

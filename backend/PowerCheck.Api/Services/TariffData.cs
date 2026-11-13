@@ -83,6 +83,81 @@ public class TariffData(AppDbContext db)
             SystemPrices: prices,
             Source: "CEB Household Rooftop Solar PV Scheme leaflet (July 2026); CEB solar price guide; PVGIS 5.3, European Commission JRC");
     }
+
+    // The prosumer tariff a solar home moves to: 150A for a single-phase supply, 150B for three-phase.
+    // Returns null for an unknown phase, or when no prosumer rates were in force on that date.
+    public ProsumerTariffSnapshot? GetProsumerTariff(string phase = "single", DateTime? onDate = null)
+    {
+        var day = (onDate ?? DateTime.UtcNow).Date;
+
+        // Newest effective date on or before the day wins, the same rule as GetTariff.
+        var tariff = db.ProsumerTariffs.AsNoTracking().Where(t => t.Phase == phase).ToList()
+            .Where(t => t.EffectiveFrom.Date <= day)
+            .OrderByDescending(t => t.EffectiveFrom)
+            .FirstOrDefault();
+        if (tariff is null) return null;
+
+        var bands = db.ProsumerTariffBands.AsNoTracking().Where(b => b.TariffCode == tariff.TariffCode).ToList()
+            .Where(b => b.EffectiveFrom.Date == tariff.EffectiveFrom.Date)
+            .OrderBy(b => b.Tier)
+            .Select(b => new TariffBandDto(b.FromKwh, b.ToKwh, b.RateRsPerKwh))
+            .ToList();
+
+        // Minimums are stored as upper limits (75, 300, none). Each range starts where the one before ends.
+        var minimumRows = db.ProsumerMinimumCharges.AsNoTracking().Where(m => m.TariffCode == tariff.TariffCode).ToList()
+            .Where(m => m.EffectiveFrom.Date == tariff.EffectiveFrom.Date)
+            .OrderBy(m => m.MaxTotalKwh ?? decimal.MaxValue)
+            .ToList();
+        var minimums = new List<MinimumChargeBandDto>();
+        decimal from = 0;
+        foreach (var m in minimumRows)
+        {
+            minimums.Add(new MinimumChargeBandDto(from, m.MaxTotalKwh, m.MinimumRs));
+            from = m.MaxTotalKwh ?? from;
+        }
+
+        return new ProsumerTariffSnapshot(
+            tariff.TariffCode,
+            tariff.Phase,
+            tariff.EffectiveFrom,
+            tariff.FlatRateMaxTotalKwh,
+            tariff.FlatRateRsPerKwh,
+            bands,
+            minimums,
+            $"CEB residential prosumer tariff {tariff.TariffCode}, in force from {tariff.EffectiveFrom:d MMMM yyyy} (General Notice 473 of 2026, Appendix VIII, page {tariff.SourcePage})",
+            "https://ceb.mu/docs/files/files/publications/regulations/electricity_tariff_2026.pdf");
+    }
+}
+
+// One minimum-charge range on a prosumer tariff, by TOTAL monthly use:
+// it applies when total use is above FromTotalKwh and up to ToTotalKwh (null = no upper limit).
+public record MinimumChargeBandDto(decimal FromTotalKwh, decimal? ToTotalKwh, decimal MinimumRs);
+
+// A prosumer tariff in force on one date.
+// Rules (General Notice 473 of 2026, Appendix VIII):
+//  - 150A: if TOTAL use is up to FlatRateMaxTotalKwh (300), all NET energy is charged at FlatRateRsPerKwh (8.58).
+//    Otherwise NET energy goes through Bands from 0 kWh.
+//  - 150B: NET energy always goes through Bands.
+//  - The minimum charge is chosen by TOTAL use (MinimumChargeFor).
+//  - Total use = production + import - export (CEB solar leaflet, page 3: C = P + I - E).
+public record ProsumerTariffSnapshot(
+    string TariffCode,
+    string Phase,
+    DateTime EffectiveFrom,
+    decimal? FlatRateMaxTotalKwh,
+    decimal? FlatRateRsPerKwh,
+    List<TariffBandDto> Bands,
+    List<MinimumChargeBandDto> MinimumCharges,
+    string Source,
+    string SourceUrl)
+{
+    // True when this month's NET energy is charged at the flat rate (150A, total use up to 300 kWh).
+    public bool UsesFlatRate(decimal totalKwh) =>
+        FlatRateMaxTotalKwh is decimal max && FlatRateRsPerKwh is not null && totalKwh <= max;
+
+    // The minimum monthly charge for this month's TOTAL use.
+    public decimal MinimumChargeFor(decimal totalKwh) =>
+        MinimumCharges.First(m => m.ToTotalKwh is null || totalKwh <= m.ToTotalKwh).MinimumRs;
 }
 
 // The tariff in force on one date: bands cheapest first, 0-based (0-25, 25-50 ...).
