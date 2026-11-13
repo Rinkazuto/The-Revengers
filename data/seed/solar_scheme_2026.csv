@@ -1,0 +1,15 @@
+parameter,value,unit,applies_to,source,source_page
+grant_share,25,percent of system cost,eligible households,"CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",1
+grant_cap,75000,Rs per application,eligible households,"CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",2
+gross_metering_export_rate,4.83,Rs per kWh produced,gross metering,"CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",3
+net_metering_excess_export_rate,3.00,Rs per kWh of excess net export,net metering,"CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",4
+cst_rate_up_to_500_kwh,0.00,Rs per kWh of energy offset,"net metering, monthly consumption up to 500 kWh","CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",3
+cst_rate_501_to_1000_kwh,0.82,Rs per kWh of energy offset,"net metering, monthly consumption 501 to 1000 kWh","CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",3
+cst_rate_above_1000_kwh,1.63,Rs per kWh of energy offset,"net metering, monthly consumption above 1000 kWh","CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",3
+power_base_charge,163.00,Rs per kW solar PV installed,tariff 150A_NM exempted until further notice,"CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",4
+processing_fee,2000,"Rs, non-refundable",every application,"CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",5
+battery_required_above,3.5,kWac,all systems,"CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",1
+network_survey_required_above,10,kWac,all systems,"CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",1
+max_installation_capacity,50,kW,all systems,"CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",5
+max_export_per_phase,5,kWac,all systems,"CEB Household Rooftop Solar PV Scheme leaflet, revised July 2026",1
+annual_panel_degradation,0.5,percent per year,CEB calculator estimate,"CEB Solar PV Comparison page, ceb.mu/pv_calculator",
