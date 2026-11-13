@@ -1,6 +1,10 @@
 ﻿using System.Globalization;
+using Microsoft.EntityFrameworkCore;
+using PowerCheck.Api.Data;
+using PowerCheck.Api.Models;
 
 // Endpoints for saving and listing monthly readings.
+// Readings are saved in the database (Readings table), so they survive restarts.
 
 public static class ReadingEndpoints
 {
@@ -9,7 +13,7 @@ public static class ReadingEndpoints
         var api = app.MapGroup("/api");
 
         // POST /api/readings -> save one month's usage
-        api.MapPost("/readings", (ReadingRequest request) =>
+        api.MapPost("/readings", (ReadingRequest request, AppDbContext db) =>
         {
             // 1. Check the request
             var errors = new Dictionary<string, string[]>();
@@ -29,31 +33,54 @@ public static class ReadingEndpoints
             if (errors.Count > 0)
                 return Results.ValidationProblem(errors);
 
-            // 2. Save it (new month, or overwrite an existing one)
-            var (reading, isNew) = ReadingStore.Save(request.Month, request.Kwh);
-            var dto = ToDto(reading);
+            // 2. Save it: overwrite the month if it already exists (one reading per month)
+            var reading = db.Readings.FirstOrDefault(r => r.Month == request.Month);
+            var isNew = reading is null;
+
+            if (isNew)
+            {
+                reading = new Reading { Month = request.Month };
+                db.Readings.Add(reading);
+            }
+
+            reading!.Kwh = request.Kwh;
+            reading.UpdatedAtUtc = DateTime.UtcNow;
+            db.SaveChanges();
 
             // 3. 201 = new month created, 200 = existing month overwritten
+            var dto = ToDto(reading, new TariffData(db));
             return isNew
                 ? Results.Created($"/api/readings/{dto.Id}", dto)
                 : Results.Ok(dto);
         });
 
-        // GET /api/readings -> all saved months + trend
-        api.MapGet("/readings", () =>
+        // GET /api/readings -> all saved months (oldest first) + trend
+        api.MapGet("/readings", (AppDbContext db) =>
         {
-            var readings = ReadingStore.GetAll().Select(ToDto).ToList();
+            var data = new TariffData(db);
+
+            var readings = db.Readings.AsNoTracking()
+                .OrderBy(r => r.Month)              // "YYYY-MM" text sorts in date order
+                .ToList()
+                .Select(r => ToDto(r, data))
+                .ToList();
+
             return Results.Ok(new ReadingsResponse(readings, GetTrend(readings)));
         });
     }
 
-    // Turn a stored reading into what we send back, with its bill worked out
-    private static ReadingDto ToDto(ReadingStore.StoredReading r)
+    // Turn a saved reading into what we send back, with its bill worked out.
+    // Uses the CEB tariff that was in force in that month (falls back to today's if none).
+    private static ReadingDto ToDto(Reading r, TariffData data)
     {
-        var bill = BillCalculator.Calculate(
-            r.Kwh, FakeTariffData.Bands, FakeTariffData.MinimumChargeRs, FakeTariffData.Source);
+        var firstDay = DateTime.ParseExact(r.Month, "yyyy-MM", CultureInfo.InvariantCulture);
+        var tariff = data.GetTariff(null, firstDay) ?? data.GetTariff();
 
-        return new ReadingDto(r.Id, r.Month, r.Kwh, bill.TotalRs);
+        var billRs = tariff is null
+            ? 0
+            : BillCalculator.Calculate(r.Kwh, tariff.Bands, tariff.MinimumChargeRs, tariff.Source).TotalRs;
+
+        return new ReadingDto(r.Id, r.Month, r.Kwh, billRs);
     }
 
     // Compare the last two months: "up", "down", "flat", or null if fewer than 2
