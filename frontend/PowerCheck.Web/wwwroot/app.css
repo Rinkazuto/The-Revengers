@@ -68,3 +68,13 @@ h1:focus {
         color: var(--mud-palette-primary);
         font-weight: 600;
     }
+
+/* Section 6: tap targets at least 48 px high */
+.tap-48 {
+    min-height: 48px;
+}
+
+/* Bill result: space between band rows */
+.band-row {
+    margin-bottom: 16px;
+}
