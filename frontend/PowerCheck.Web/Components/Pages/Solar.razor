@@ -1,6 +1,173 @@
 ﻿@page "/solar"
+@using System.Globalization
+@inject IPowerCheckApi Api
+@inject CalculationState State
 
-<PageTitle>Solar: Power Check</PageTitle>
+<PageTitle>Solar: ReVolt</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">Solar check</MudText>
-<MudText>Compare your bill without solar and with solar. Coming soon.</MudText>
+<MudText Typo="Typo.h5">Solar check</MudText>
+
+@if (State.MonthlyKwh is null)
+{
+    @* ---------- No bill yet: the user opened the Solar tab first ---------- *@
+    <MudPaper Class="pa-4 mt-4" Elevation="1">
+        <MudText Class="mb-4">
+            First, enter the units (kWh) from your CEB bill on the Bill page.
+            We'll use them to compare your bill with and without solar.
+        </MudText>
+        <MudButton Href="/" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="tap-48">
+            Go to Bill
+        </MudButton>
+    </MudPaper>
+}
+else
+{
+    <MudText Typo="Typo.body2" Class="mb-4">
+        Based on @Kwh(State.MonthlyKwh.Value) kWh / month · Tariff @(State.TariffCode ?? "110")
+    </MudText>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-center my-8">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        </div>
+    }
+    else if (_error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Class="tap-48" OnClick="EstimateAsync">
+            Try again
+        </MudButton>
+    }
+    else if (_result is not null)
+    {
+        @* ---------- Today vs With solar, side by side (MudGrid: 2 columns even on phones) ---------- *@
+        <MudGrid Spacing="2" Class="mb-2">
+            <MudItem xs="6">
+                <MudPaper Class="pa-3" Elevation="1" Style="height: 100%;">
+                    <MudText Typo="Typo.caption">Today</MudText>
+                    <MudText Typo="Typo.h6">Rs @Rs(_result.WithoutSolar.MonthlyBillRs)</MudText>
+                    <MudText Typo="Typo.caption">per month</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6">
+                <MudPaper Class="pa-3" Elevation="1" Style="height: 100%; border: 2px solid var(--mud-palette-primary);">
+                    <MudText Typo="Typo.caption">With solar</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Primary">Rs @Rs(_result.WithSolar.MonthlyBillRs)</MudText>
+                    <MudText Typo="Typo.caption">per month</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        @* ---------- Savings and payback ---------- *@
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            @if (_result.MonthlySavingsRs > 0)
+            {
+                <MudText Typo="Typo.h5" Color="Color.Primary">Save Rs @Rs(_result.MonthlySavingsRs) / month</MudText>
+                <MudText Class="mb-2">That's Rs @Rs(_result.YearlySavingsRs) in the first year.</MudText>
+            }
+
+            @if (_result.PaybackYears is { } years)
+            {
+                <MudText Typo="Typo.h6">Money back in @years.ToString("0.#", Inv) years</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.h6">Solar doesn't pay back at this usage.</MudText>
+            }
+
+            <MudText Typo="Typo.caption" Class="d-block mt-2">
+                Install cost after the 25% government grant: Rs @Rs(_result.InstallCostRs) (CEB estimate)
+            </MudText>
+        </MudPaper>
+
+        @* ---------- Panel size ---------- *@
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudSelect T="decimal" Value="_sizeChoice" ValueChanged="OnSizeChangedAsync"
+                       Label="Panel size" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem T="decimal" Value="0m">Recommended for my usage</MudSelectItem>
+                @foreach (var size in Sizes)
+                {
+                    <MudSelectItem T="decimal" Value="@size">@Kwh(size) kWp</MudSelectItem>
+                }
+            </MudSelect>
+            <MudText Typo="Typo.caption">
+                @Kwh(_result.SystemSizeKwp) kWp makes about @Kwh(Math.Round(_result.WithSolar.MonthlyGenerationKwh)) kWh a month on average.
+            </MudText>
+        </MudPaper>
+
+        @* ---------- How to apply ---------- *@
+        <MudButton Href="@SchemeLeafletUrl" Target="_blank"
+                   Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
+                   EndIcon="@Icons.Material.Filled.OpenInNew" Class="tap-48 mb-4">
+            How to apply
+        </MudButton>
+
+        @* ---------- Where the numbers come from ---------- *@
+        <MudExpansionPanels Elevation="1" Class="mb-4">
+            <MudExpansionPanel Text="How we worked this out">
+                @foreach (var assumption in _result.Assumptions)
+                {
+                    <MudText Typo="Typo.body2" Class="mb-2">• @assumption</MudText>
+                }
+                <MudText Typo="Typo.caption">Source: @_result.Source</MudText>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    }
+}
+
+@code {
+    private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+
+    // Official CEB scheme leaflet (link from data/sources/README.md)
+    private const string SchemeLeafletUrl =
+        "https://ceb.mu/docs/files/files/application%20schemes/Information%20Leaflet%20on%20Household%20Rooftop%20Solar%20Photovoltaic%20Scheme.pdf";
+
+    // CEB price-guide sizes from the agreed API contract (no endpoint lists them).
+    private static readonly decimal[] Sizes = [1.5m, 2m, 2.5m, 3m, 3.5m, 4m, 4.5m, 5m, 6m, 7.5m, 10m, 15m];
+
+    private decimal _sizeChoice;   // 0 = let the backend recommend a size
+    private SolarResponse? _result;
+    private bool _loading;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Only estimate if the user calculated a bill first
+        if (State.MonthlyKwh is not null)
+        {
+            await EstimateAsync();
+        }
+    }
+
+    private async Task OnSizeChangedAsync(decimal size)
+    {
+        _sizeChoice = size;
+        await EstimateAsync();
+    }
+
+    private async Task EstimateAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            decimal? size = _sizeChoice == 0 ? null : _sizeChoice;
+            _result = await Api.EstimateSolarAsync(new SolarRequest(State.MonthlyKwh!.Value, size, State.TariffCode));
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+            _result = null;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    // Money always with 2 decimals (contract rule), e.g. 1,216.75
+    private static string Rs(decimal value) => value.ToString("N2", Inv);
+
+    private static string Kwh(decimal value) => value.ToString("0.##", Inv);
+}
