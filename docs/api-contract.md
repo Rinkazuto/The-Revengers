@@ -1,8 +1,8 @@
 # Power Check: API Contract
 
-**Status:** DRAFT. Confirm with the Backend Lead, Data Lead and Frontend Lead, then change this to **AGREED** and log it in `docs/decision-log.md`.
+**Status:** AGREED (13 Nov 2026) by the Backend Lead, Data Lead, Frontend Lead and Integrator. See `docs/decision-log.md`.
 
-**Owner:** Integrator. Changes after AGREED go through a PR and get announced in the team chat.
+**Owner:** Integrator. Changes go through a PR and get announced in the team chat. The C# shapes live in `backend/PowerCheck.Api/Contracts/ApiContracts.cs`; this file and that file must always match.
 
 ---
 
@@ -16,14 +16,16 @@
 | Money | Mauritian rupees (`Rs`), decimal, rounded to 2 places |
 | Energy | kWh, decimal |
 | Month | String `"YYYY-MM"`, e.g. `"2026-10"` |
-| Login | None in the MVP |
+| Tariff code | Optional everywhere. `110` (default), `110A`, `120` or `140`. Unknown code → 400 (404 on GET /api/tariffs). |
+| Login | None in the MVP. Readings are one shared list for the demo. |
 | Swagger | `http://localhost:5012/swagger` |
+| Health check | `GET /health` → `{ "status": "ok" }` |
 
-> ⚠️ **All numbers in the examples below are made up to show the shape.** Real values come from the CEB tariff and the 2026 solar scheme in `data/seed/`.
+> ⚠️ **Numbers in the examples below only show the shape.** Real values come from the database, seeded from `data/seed/` (CEB tariffs, CEB 2026 solar scheme leaflet, CEB price guide, PVGIS). Sources are listed in `data/sources/README.md`.
 
 ### Errors (every endpoint)
 
-Bad input returns **400** with ASP.NET's standard `ProblemDetails`:
+Bad input returns **400** with ASP.NET's standard `ValidationProblem`:
 
 ```json
 {
@@ -36,32 +38,33 @@ Bad input returns **400** with ASP.NET's standard `ProblemDetails`:
 | Code | Meaning |
 |---|---|
 | 200 | OK |
-| 201 | Created (POST /api/readings) |
+| 201 | Created (POST /api/readings, new month) |
 | 400 | Bad input; show `errors` to the user |
-| 404 | Not found |
+| 404 | Not found (unknown tariff code on GET /api/tariffs) |
 | 500 | Backend bug; show "Something went wrong, try again" |
 
 ---
 
-## 1. GET `/api/tariffs`
+## 1. GET `/api/tariffs?tariffCode=110`
 
-The CEB domestic tariff bands, from the database.
+The CEB domestic price bands in force today, from the database. `tariffCode` is optional (default `110`).
 
 **Response 200**
 ```json
 {
-  "source": "CEB domestic tariff 2026",
-  "sourceUrl": "https://...",
+  "tariffCode": "110",
+  "source": "CEB domestic tariff 110, in force from 1 May 2026",
+  "sourceUrl": "https://ceb.mu/tariffs",
   "bands": [
-    { "fromKwh": 0,   "toKwh": 25,   "pricePerKwh": 0.00 },
-    { "fromKwh": 25,  "toKwh": 50,   "pricePerKwh": 0.00 },
-    { "fromKwh": 50,  "toKwh": null, "pricePerKwh": 0.00 }
+    { "fromKwh": 0,  "toKwh": 25,   "pricePerKwh": 0.00 },
+    { "fromKwh": 25, "toKwh": 50,   "pricePerKwh": 0.00 },
+    { "fromKwh": 50, "toKwh": null, "pricePerKwh": 0.00 }
   ],
-  "fixedChargeRs": 0.00
+  "minimumChargeRs": 0.00
 }
 ```
 - `toKwh: null` means "and above".
-- Bands are sorted by `fromKwh`.
+- Bands are sorted by `fromKwh`. The newest `effective_from` in force today wins.
 
 ---
 
@@ -71,11 +74,12 @@ Work out a monthly bill **without solar**.
 
 **Request**
 ```json
-{ "monthlyKwh": 250 }
+{ "monthlyKwh": 250, "tariffCode": "110" }
 ```
 | Field | Rule |
 |---|---|
 | `monthlyKwh` | Required, 0 to 5000 |
+| `tariffCode` | Optional, default `110` |
 
 **Response 200**
 ```json
@@ -83,31 +87,32 @@ Work out a monthly bill **without solar**.
   "monthlyKwh": 250,
   "lines": [
     { "fromKwh": 0,  "toKwh": 25,  "kwh": 25,  "pricePerKwh": 0.00, "amountRs": 0.00 },
-    { "fromKwh": 25, "toKwh": 50,  "kwh": 25,  "pricePerKwh": 0.00, "amountRs": 0.00 },
-    { "fromKwh": 50, "toKwh": null,"kwh": 200, "pricePerKwh": 0.00, "amountRs": 0.00 }
+    { "fromKwh": 25, "toKwh": 50,  "kwh": 25,  "pricePerKwh": 0.00, "amountRs": 0.00 }
   ],
-  "fixedChargeRs": 0.00,
+  "minimumChargeRs": 0.00,
   "totalRs": 0.00,
-  "source": "CEB domestic tariff 2026"
+  "source": "CEB domestic tariff 110, in force from 1 May 2026"
 }
 ```
-- One line per band the usage reaches.
-- `totalRs` = sum of `amountRs` + `fixedChargeRs` (+ any VAT/levies, if the tariff includes them; **Data Lead to confirm**).
+- Charged **by band**: each band's kWh at that band's price. One line per band the usage reaches.
+- `totalRs` = sum of `amountRs`, but **never less than `minimumChargeRs`**.
+- Every endpoint uses the same `BillCalculator`, so bills always match.
 
 ---
 
 ## 3. POST `/api/solar/estimate` ⭐ main feature
 
-Compare **without solar vs with solar**.
+Compare **without solar vs with solar** under the 2026 CEB solar scheme.
 
 **Request**
 ```json
-{ "monthlyKwh": 250, "systemSizeKwp": 3 }
+{ "monthlyKwh": 250, "systemSizeKwp": 3, "tariffCode": "110" }
 ```
 | Field | Rule |
 |---|---|
 | `monthlyKwh` | Required, 0 to 5000 |
-| `systemSizeKwp` | Optional; if missing, use the scheme's default size. Must be > 0 and ≤ scheme maximum. |
+| `systemSizeKwp` | Optional; if missing, use the scheme's default size. Must be > 0 and ≤ the scheme maximum. |
+| `tariffCode` | Optional, default `110` |
 
 **Response 200**
 ```json
@@ -124,16 +129,23 @@ Compare **without solar vs with solar**.
   "yearlySavingsRs": 0.00,
   "installCostRs": 0.00,
   "paybackYears": 0.0,
-  "source": "CEB 2026 solar scheme",
+  "source": "CEB Household Rooftop Solar PV Scheme leaflet (July 2026); CEB solar price guide; PVGIS 5.3, European Commission JRC",
   "assumptions": [
-    "Generation of X kWh per kWp per month (source: ...)",
-    "Exported kWh credited at Rs Y (scheme rule)"
+    "Solar output: 113.71 kWh per kWp per month (PVGIS, European Commission JRC).",
+    "Install cost of Rs X per kWp",
+    "Exported kWh credited at Rs Y each"
+  ],
+  "projection": [
+    { "year": 1, "cumulativeSavingsRs": 0.00, "netGainRs": 0.00 },
+    { "year": 2, "cumulativeSavingsRs": 0.00, "netGainRs": 0.00 }
   ]
 }
 ```
-- `withoutSolar.monthlyBillRs` must equal `totalRs` from `/api/bill/calculate` for the same kWh. **QA test case.**
+- `withoutSolar.monthlyBillRs` must equal `totalRs` from `/api/bill/calculate` for the same kWh and tariff. **QA test case.**
+- `withSolar.monthlyBillRs` = bill for `kwhFromGrid` minus credit for exported kWh, never below 0.
+- `paybackYears` = `installCostRs / yearlySavingsRs`, 1 decimal. If savings are 0 or negative it is `null`, and the UI shows "Solar doesn't pay back at this usage".
+- `projection` is one row per year for the graph: `cumulativeSavingsRs` = yearly savings × year, `netGainRs` = that minus `installCostRs` (negative until payback).
 - `assumptions` is shown on screen under the result, so users and judges can see where the numbers come from.
-- If savings are 0 or negative, `paybackYears` is `null`, and the UI shows "Solar doesn't pay back at this usage".
 
 ---
 
@@ -150,12 +162,12 @@ Save one month's usage.
 | `month` | Required, `YYYY-MM`, not in the future |
 | `kwh` | Required, 0 to 5000 |
 
-**Response 201**
+**Response 201** (new month) or **200** (month already existed and was overwritten)
 ```json
 { "id": 1, "month": "2026-10", "kwh": 250, "billRs": 0.00 }
 ```
-- If that month already exists, **overwrite it** and return 200 (one reading per month).
-- `billRs` is calculated with the same logic as `/api/bill/calculate`.
+- One reading per month: saving the same month again overwrites it.
+- `billRs` uses the same `BillCalculator` as `/api/bill/calculate` (tariff `110`).
 
 ---
 
@@ -179,24 +191,25 @@ List saved months with the trend.
 
 ---
 
-## Shared C# records (suggested)
+## Shared C# records
 
-The backend and the frontend use the same shapes. Put them in one file the Integrator owns, e.g. `backend/PowerCheck.Api/Contracts/`, and copy them to the frontend, or move them into a shared project later.
+The single source of truth is `backend/PowerCheck.Api/Contracts/ApiContracts.cs`. The frontend copies these shapes.
 
 ```csharp
 public record TariffBandDto(decimal FromKwh, decimal? ToKwh, decimal PricePerKwh);
-public record TariffsResponse(string Source, string SourceUrl, List<TariffBandDto> Bands, decimal FixedChargeRs);
+public record TariffsResponse(string TariffCode, string Source, string SourceUrl, List<TariffBandDto> Bands, decimal MinimumChargeRs);
 
-public record BillRequest(decimal MonthlyKwh);
+public record BillRequest(decimal MonthlyKwh, string? TariffCode = null);
 public record BillLineDto(decimal FromKwh, decimal? ToKwh, decimal Kwh, decimal PricePerKwh, decimal AmountRs);
-public record BillResponse(decimal MonthlyKwh, List<BillLineDto> Lines, decimal FixedChargeRs, decimal TotalRs, string Source);
+public record BillResponse(decimal MonthlyKwh, List<BillLineDto> Lines, decimal MinimumChargeRs, decimal TotalRs, string Source);
 
-public record SolarRequest(decimal MonthlyKwh, decimal? SystemSizeKwp);
+public record SolarRequest(decimal MonthlyKwh, decimal? SystemSizeKwp, string? TariffCode = null);
 public record WithoutSolarDto(decimal MonthlyBillRs);
 public record WithSolarDto(decimal MonthlyGenerationKwh, decimal KwhFromGrid, decimal MonthlyBillRs);
+public record ProjectionYearDto(int Year, decimal CumulativeSavingsRs, decimal NetGainRs);
 public record SolarResponse(decimal MonthlyKwh, decimal SystemSizeKwp, WithoutSolarDto WithoutSolar, WithSolarDto WithSolar,
     decimal MonthlySavingsRs, decimal YearlySavingsRs, decimal InstallCostRs, decimal? PaybackYears,
-    string Source, List<string> Assumptions);
+    string Source, List<string> Assumptions, List<ProjectionYearDto> Projection);
 
 public record ReadingRequest(string Month, decimal Kwh);
 public record ReadingDto(int Id, string Month, decimal Kwh, decimal BillRs);
@@ -205,13 +218,21 @@ public record ReadingsResponse(List<ReadingDto> Readings, string? Trend);
 
 ---
 
-## Open questions (answer before marking AGREED)
+## Answered questions
 
-| # | Question | Who |
+| # | Question | Answer |
 |---|---|---|
-| 1 | Does the CEB domestic bill have a fixed/minimum charge, VAT or other levies? | Data Lead |
-| 2 | Is the tariff "by band" (each band at its own price) or "by bracket" (whole usage at one price)? | Data Lead |
-| 3 | 2026 solar scheme: system sizes, install cost, how exported kWh are credited | Data Lead |
-| 4 | Generation per kWp per month in Mauritius: which official source? | Data Lead |
-| 5 | Readings without login: one shared list for the demo, OK? | Team |
-| 6 | Keep `/api` prefix? | Backend Lead |
+| 1 | Fixed/minimum charge, VAT or levies? | Minimum charge per tariff code (`minimumChargeRs`). The bill is never below it. |
+| 2 | By band or by bracket? | By band: each band's kWh at its own price. |
+| 3 | 2026 solar scheme values | From the CEB Household Rooftop Solar PV Scheme leaflet (July 2026) and the CEB price guide, in `data/seed/`. |
+| 4 | Solar output per kWp | PVGIS 5.3 (European Commission JRC): 113.71 kWh per kWp per month on average. |
+| 5 | Readings without login | One shared list for the demo. |
+| 6 | Keep the `/api` prefix? | Yes. |
+
+## Known gaps (to fix before the demo)
+
+| Gap | Owner |
+|---|---|
+| `/api/solar/estimate` and the `billRs` in readings still use `FakeSolarData` / `FakeTariffData`. Switch them to `TariffData`, then delete the Fake files. | Backend Lead |
+| `/api/solar/estimate` doesn't use `tariffCode` yet (it only checks it). | Backend Lead |
+| Readings are kept in memory (`ReadingStore`), so they're lost on restart. Move them to the `Readings` table. | Backend Lead + Data Lead |
