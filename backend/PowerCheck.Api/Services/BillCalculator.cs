@@ -2,7 +2,7 @@
 
 public static class BillCalculator
 {
-    public static BillResponse Calculate(decimal monthlyKwh, List<TariffBandDto> bands, decimal fixedChargeRs, string source)
+    public static BillResponse Calculate(decimal monthlyKwh, List<TariffBandDto> bands, decimal minimumChargeRs, string source)
     {
         var lines = new List<BillLineDto>();
 
@@ -21,8 +21,11 @@ public static class BillCalculator
             lines.Add(new BillLineDto(band.FromKwh, band.ToKwh, kwhInBand, band.PricePerKwh, amount));
         }
 
-        var total = Round(lines.Sum(l => l.AmountRs) + fixedChargeRs);
-        return new BillResponse(monthlyKwh, lines, fixedChargeRs, total, source);
+        // The bill is the band total, but never less than the minimum charge
+        var bandTotal = lines.Sum(l => l.AmountRs);
+        var total = Round(Math.Max(bandTotal, minimumChargeRs));
+
+        return new BillResponse(monthlyKwh, lines, minimumChargeRs, total, source);
     }
 
     // Money is always rounded to 2 decimal places
