@@ -13,6 +13,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<SolarSystemPrice> SolarSystemPrices => Set<SolarSystemPrice>();
     public DbSet<PvgisMonthlyYield> PvgisMonthlyYields => Set<PvgisMonthlyYield>();
     public DbSet<Reading> Readings => Set<Reading>();
+    public DbSet<ProsumerTariff> ProsumerTariffs => Set<ProsumerTariff>();
+    public DbSet<ProsumerTariffBand> ProsumerTariffBands => Set<ProsumerTariffBand>();
+    public DbSet<ProsumerMinimumCharge> ProsumerMinimumCharges => Set<ProsumerMinimumCharge>();
 
     // Unique indexes stop the same row being loaded twice.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -31,5 +34,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasIndex(y => y.Month).IsUnique();
         modelBuilder.Entity<Reading>()
             .HasIndex(r => r.Month).IsUnique();   // one reading per month, as the contract says
+        modelBuilder.Entity<ProsumerTariff>()
+            .HasIndex(p => new { p.TariffCode, p.EffectiveFrom }).IsUnique();
+        modelBuilder.Entity<ProsumerTariffBand>()
+            .HasIndex(b => new { b.TariffCode, b.EffectiveFrom, b.Tier }).IsUnique();
+        modelBuilder.Entity<ProsumerMinimumCharge>()
+            .HasIndex(m => new { m.TariffCode, m.EffectiveFrom, m.MaxTotalKwh }).IsUnique();
     }
 }
