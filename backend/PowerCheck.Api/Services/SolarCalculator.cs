@@ -67,6 +67,7 @@ public static class SolarCalculator
             $"Government grant: {scheme.GrantSharePercent:0.##}% of the cost, up to Rs {scheme.GrantCapRs:N0} (eligible households). Processing fee: Rs {scheme.ProcessingFeeRs:N0}.",
             $"Net metering: extra solar energy is credited at Rs {scheme.NetMeteringExcessExportRateRs:N2} per kWh. CST charge at your usage: Rs {cstRate:N2} per kWh of energy offset.",
             $"Panels lose {scheme.AnnualPanelDegradationPercent:0.##}% of their output each year (CEB estimate).",
+            $"We assume export credit cannot reduce your bill below the CEB minimum charge of Rs {tariff.MinimumChargeRs:N2} (the scheme leaflet does not say). Your real bill could be lower.",
             $"Bills use {tariff.Source}.",
         };
 
@@ -115,7 +116,7 @@ public static class SolarCalculator
                        + offset * cstRate
                        - exported * scheme.NetMeteringExcessExportRateRs;
 
-            yearBill += BillCalculator.Round(Math.Max(0, bill));      // a bill is never below zero
+            yearBill += BillCalculator.Round(Math.Max(tariff.MinimumChargeRs, bill));   // never below the CEB minimum charge
             yearFromGrid += fromGrid;
         }
 
