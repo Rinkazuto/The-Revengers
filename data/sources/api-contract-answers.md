@@ -16,7 +16,7 @@ Prepared 13 Nov 2026 by the Data Lead. Every figure has a source. Items marked E
 ## Q2. By band or by bracket
 - **By band.** General Notice No. 1804 of 2022 charges "Initial 25 kilowatt hours", then "Next 25 kilowatt hours", each at its own rate. 200 kWh on tariff 110 (2026) = 25x3.63 + 25x5.04 + 25x5.45 + 25x6.27 + 100x7.07 = **Rs 1,216.75**.
 - 40 expected bills are in tests/test-cases/bill_test_cases.csv for QA: 12 each for tariff 110 (2023), 110 (2026) and 110A (2026), and 2 each for 120 and 140 (2026).
-- Band boundaries: data/seed/tariff_tiers.csv uses from_kwh 1 to 25, 26 to 50 and so on. The contract's fromKwh 0 to 25, 25 to 50 covers the same units. Backend Lead picks one and documents it.
+- Band boundaries: AGREED with the Backend Lead on 13 Nov 2026. data/seed/tariff_tiers.csv keeps the Gazette wording, from_kwh 1 to 25, 26 to 50 and so on. The seeder stores FromKwh = from_kwh minus 1, so the database holds 0 to 25, 25 to 50, matching the contract. Each band covers the same kWh either way: kWh in a band = min(usage, ToKwh) minus FromKwh. All 40 test cases give the same bills with the database values.
 
 ## Q3. 2026 solar scheme
 Source: CEB Household Rooftop Solar Photovoltaic (PV) Scheme information leaflet, revised July 2026 (link in data/sources/README.md). The figures are in data/seed/solar_scheme_2026.csv and data/seed/solar_system_prices_2026.csv.
