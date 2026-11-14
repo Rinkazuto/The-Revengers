@@ -192,3 +192,34 @@ h1:focus {
     width: 100%;
     min-width: 0;
 }
+
+/* ---------- Bill page (new wireframes 2 & 3) ---------- */
+
+/* Big kWh number in the input box */
+.kwh-big input {
+    font-size: 28px;
+    font-weight: 600;
+}
+
+/* "Where to find kWh": a mini CEB bill */
+.bill-sample {
+    background: var(--mud-palette-surface);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+/* The highlighted number on the mini bill */
+.bill-sample-value {
+    background: #FFF3BF;
+    font-weight: 600;
+    padding: 0 4px;
+    border-radius: 4px;
+}
+
+/* Bar under each tariff band (width and darkness set per band in Home.razor) */
+.band-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--mud-palette-primary);
+    margin-top: 4px;
+}
