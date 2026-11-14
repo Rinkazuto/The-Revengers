@@ -1,0 +1,10 @@
+case_id,step,month,kwh,expected_status,expected_bill_rs,expected_trend_after,tariff_in_force,working
+RD-01,save in order on an empty database,2026-08,190,201,1146.05,(none: fewer than 2 readings),110 from 2026-05-01,tariff 110 bands for that month
+RD-02,save in order on an empty database,2026-09,201,201,1224.82,up,110 from 2026-05-01,tariff 110 bands for that month
+RD-03,save in order on an empty database,2026-10,230,201,1458.85,up,110 from 2026-05-01,tariff 110 bands for that month
+RD-04,"save again, same month as RD-03",2026-10,180,200,1075.35,down,110 from 2026-05-01,overwrites 2026-10 (one reading per month); 180 < 201 so trend down
+RD-05,save an older month,2026-04,200,201,1058.25,down,110 from 2023-02-01,"April 2026 is before the 1 May 2026 rise, so 2023 rates apply; list stays sorted by month"
+RD-90,bad input,2099-01,200,400,,,,month in the future
+RD-91,bad input,2026-13,200,400,,,,month must look like YYYY-MM
+RD-92,bad input,2026-10,-1,400,,,,kwh below 0
+RD-93,bad input,2026-10,5001,400,,,,kwh above 5000
