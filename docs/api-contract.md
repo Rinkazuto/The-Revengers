@@ -362,9 +362,9 @@ public record OutlookResponse(string Level, decimal MaxWindKmh, decimal MaxGustK
 | 11 | Solar uses real data: monthly PVGIS output, net metering credit, CST charge, panel ageing; payback counted year by year | Solar response | ✅ Merged (#66) |
 | 11b | Readings saved in the database; `billRs` uses the tariff in force that month; fake data files removed | Readings | ✅ Merged (#69) |
 | 12 | Interim fix: export credit can't take the bill below the minimum charge | Solar response | ✅ Merged (#72), replaced by row 13 |
-| 13 | With solar the home is billed on **prosumer tariff 150A/150B** (GN 473/2026): flat Rs 8.58 up to 300 kWh total use, bands above, minimum charge by total use; CST only above 500 kWh, labelled pending URA approval | Solar response | 🔄 150A/150B data merged (#73), backend coding the bill |
-| 14 | New `exportCreditRs` in `withSolar`, shown separately, **not** counted in savings | Solar response | 🔄 Agreed, backend coding |
-| 15 | New optional `phase` (`"single"` → 150A default, `"three"` → 150B); `tariffCode` only affects the without-solar bill | Solar request | 🔄 Agreed, backend coding |
+| 13 | With solar the home is billed on **prosumer tariff 150A/150B** (GN 473/2026): flat Rs 8.58 up to 300 kWh total use, bands above, minimum charge by total use; CST only above 500 kWh, labelled pending URA approval | Solar response | ✅ Merged (#73 data, #103 bill). Checked: 200 kWh + 3 kWp = Rs 211.60, saving Rs 1,005.15 |
+| 14 | New `exportCreditRs` in `withSolar`, shown separately, **not** counted in savings | Solar response | ✅ Merged (#103) |
+| 15 | New optional `phase` (`"single"` → 150A default, `"three"` → 150B); `tariffCode` only affects the without-solar bill | Solar request | ✅ Merged (#103) |
 | 16 | 🆕 Cyclone mode: `GET /api/cyclone/appliances`, `POST /api/cyclone/backup` | Sections 6–7 | ✅ Merged (#77), with 2 placeholders (fridge 50 W, usable battery 80%) until the Data Lead's sources arrive |
 | 17 | 🆕 `GET /api/cyclone/outlook`: OpenWeather wind → battery advice (`ok` / `charge` / `chargeNow`, Beaufort on sustained wind), offline fallback | Section 8 | 🔄 Agreed, only if done before the freeze |
 
@@ -372,7 +372,7 @@ public record OutlookResponse(string Level, decimal MaxWindKmh, decimal MaxGustK
 
 | Gap | Owner |
 |---|---|
-| Solar "with solar" bill still uses tariff 110 rules; switch to 150A/150B (rows 13–15 above). | Backend Lead |
+| Website models (`ApiModels.cs`) don't have `Phase` and `ExportCreditRs` yet, so the Solar page can't show the export credit. | Frontend Lead |
 | No demo readings in `data/seed/`, so the Readings page starts empty. | Data Lead |
 | Cyclone: the fridge (from an EEMO energy label of a fridge sold in Mauritius) and usable battery % (datasheet of a 5 kWh battery sold in Mauritius) need sources; the other appliance watts need a source line each. | Data Lead |
 | Cyclone outlook: OpenWeather API key (user-secrets on the demo laptop) and a real saved forecast in `data/sources/raw/`. | Backend Lead |
