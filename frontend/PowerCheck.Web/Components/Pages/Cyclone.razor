@@ -29,7 +29,7 @@ else
         <MudText>Your battery</MudText>
         <MudNumericField T="decimal?" Value="_batteryKwh" ValueChanged="OnBatteryChangedAsync"
                          Adornment="Adornment.End" AdornmentText="kWh"
-                                                  HideSpinButtons="true" InputMode="InputMode.@decimal"
+                                                  HideSpinButtons="true" InputMode="@(InputMode.@decimal)"
                          Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width: 120px;" />
     </div>
     @if (_batteryError is not null)
