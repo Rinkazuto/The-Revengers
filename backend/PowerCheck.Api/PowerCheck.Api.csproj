@@ -21,6 +21,8 @@
        so the database is filled on the server too. Local runs still read ../../data/seed. -->
   <ItemGroup>
     <None Include="..\..\data\seed\**\*.csv" Link="data\seed\%(RecursiveDir)%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" CopyToOutputDirectory="Never" />
+    <!-- The saved OpenWeather forecast, so the wind outlook works offline on the server too -->
+    <None Include="..\..\data\sources\raw\openweather_forecast_*.json" Link="data\sources\raw\%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" CopyToOutputDirectory="Never" />
   </ItemGroup>
 
 </Project>
