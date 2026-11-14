@@ -96,10 +96,11 @@ On screen and on slides, say "up to". The team's wording: "Assumes a new, fully 
 
 | Figure | Value |
 |---|---|
-| Official sources the calculations use | 10: CEB tariffs page, CEB 2023 tariff PDF, General Notice 1804 of 2022, General Notice 473 of 2026, Cabinet decisions of 10 April 2026, Statistics Mauritius 2025, CEB solar leaflet, CEB solar price guide, CEB SSDG Grid Code, PVGIS, VAT Act |
+| Official sources behind the figures | 10: CEB tariffs page, CEB 2023 tariff PDF, General Notice 1804 of 2022, General Notice 473 of 2026, Cabinet decisions of 10 April 2026, Statistics Mauritius 2025, CEB solar leaflet, CEB solar price guide, CEB SSDG Grid Code, PVGIS, VAT Act |
 | Other named, checkable sources (cyclone mode) | Courts Mammouth (fridge label), Virginia Tech BSE-301NP, TP-Link Archer C6 spec, US FTC "Shopping for Light Bulbs", Huawei LUNA2000 and SUN2000 specs, Met Office Beaufort scale, label photo of a team member's Apple 35W charger (Model A2676) |
 | NASA POWER | Kept in `data/` as a cross-check of PVGIS only. Not used in any calculation |
 | Rows of real data in the database | 60 tariff bands, 7 minimum charges, 2 meter rents, 15 solar scheme values, 12 system prices, 12 PVGIS months, 2 prosumer tariffs with 10 bands and 4 minimum charges |
+| Cyclone values read straight from `data/seed` | 7 appliances, 10 reference values (battery, inverter efficiency, Beaufort wind levels) |
 | Expected results used to test the app | 40 bills, 7 solar cases, 11 cyclone cases, each worked out separately from the app's code |
 
 ## Ready answers for judges
