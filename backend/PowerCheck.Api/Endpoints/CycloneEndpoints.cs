@@ -85,7 +85,7 @@ public static class CycloneEndpoints
                 $"Usable battery: {values.UsableBatteryPercent:0.##}% of {batteryKwh:0.##} kWh = {usableKwh:0.##} kWh ({values.UsableBatterySource}).",
                 $"Battery size: {schemeBattery:0.##} kWh is the battery in CEB's solar price guide, unless you choose another size.",
                 "Assumes a new, fully charged battery. Real time is usually shorter: inverters lose more at small loads, and older batteries hold less.",
-                "We ignore recharging from the panels during the cyclone (heavy cloud), so this is the safe, lower figure.",
+                "We ignore recharging from the panels during the cyclone (heavy cloud).",
                 "Appliance watts are from labels and published tables; your own appliances may use less.",
                 "Without a battery, ordinary rooftop solar switches off when the CEB grid goes down.",
                 "For official cyclone warnings, check the Mauritius Meteorological Services (MMS).",
