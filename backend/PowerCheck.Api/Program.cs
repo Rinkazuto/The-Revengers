@@ -26,7 +26,11 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
-    Seeder.Run(db, Path.Combine(app.Environment.ContentRootPath, "..", "..", "data", "seed"));
+
+    // Seed folder: next to the app when published (e.g. on Azure), else the repo's data/seed when run locally
+    var publishedSeed = Path.Combine(app.Environment.ContentRootPath, "data", "seed");
+    var repoSeed = Path.Combine(app.Environment.ContentRootPath, "..", "..", "data", "seed");
+    Seeder.Run(db, Directory.Exists(publishedSeed) ? publishedSeed : repoSeed);
 }
 
 // Swagger page at /swagger

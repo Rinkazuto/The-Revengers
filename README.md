@@ -24,14 +24,81 @@ Team **The Revengers**: Theme 3, *Powered to Live Better*.
 <!-- Frontend, backend, database. -->
 
 ## AI tools used
-<!-- Tool and what we used it for. -->
-- Claude: repo setup and ...
+We used AI as a helper. The team chose the idea, the features and the data sources, and checked the results.
+
+- **Claude (Integrator):** help with Git and GitHub commands, drafting the board cards, the API contract and this README, a first version of the CI workflow, and double-checking test results against our own hand calculations.
+- <!-- Each teammate: add your tool and what you used it for, in one line. -->
+
+All tariff, solar and cyclone figures come from the official sources listed above, not from AI.
 
 ## Surprise card
 <!-- What the card was and how we handled it. -->
 
 ## How to run
-<!-- Step-by-step commands. -->
+
+### You need
+- **.NET 10 SDK**: `dotnet --version` should show `10.x`
+- **Git**
+
+### 1. Get the code
+```bash
+git clone https://github.com/Rinkazuto/The-Revengers.git
+cd The-Revengers
+git switch main
+```
+
+### 2. Start the API (terminal 1)
+```bash
+dotnet run --project backend/PowerCheck.Api
+```
+- Wait for `Now listening on: http://localhost:5012`.
+- On the first start it creates `app.db` and fills it from `data/seed/` (CEB tariffs, 2026 solar scheme, prosumer tariff 150A/150B, PVGIS sun data, cyclone data).
+- Check: <http://localhost:5012/health> shows `{"status":"ok"}`. All endpoints: <http://localhost:5012/swagger>.
+
+### 3. Start the website (terminal 2)
+```bash
+dotnet run --project frontend/PowerCheck.Web
+```
+- Open <http://localhost:5062>.
+- The website gets its data from the API at `ApiBaseUrl` in `frontend/PowerCheck.Web/appsettings.json`. `"UseMockApi"` must be `false` to use the real API (with `true` it shows built-in sample data).
+
+### 4. Check everything works (one command)
+With both closed, from the repo root:
+```bash
+powershell -ExecutionPolicy Bypass -File scripts\check-app.ps1
+```
+It builds, starts the API and the website with real data, checks the key numbers (200 kWh bill = Rs 1,216.75; 200 kWh + 3 kWp with solar = Rs 211.60), opens the site in your browser, and stops both when you press Enter.
+
+### 5. Open it on a phone
+Only the website's port (5062) needs to reach the phone: the website talks to the API on the laptop itself.
+
+**Same Wi-Fi:**
+```bash
+dotnet run --project frontend/PowerCheck.Web --urls http://0.0.0.0:5062
+```
+Find the laptop's IP with `ipconfig` (IPv4 Address), then open `http://<that IP>:5062` on the phone. Allow the Windows Firewall prompt.
+
+**Any network (dev tunnel, used for the demo):**
+```bash
+winget install Microsoft.devtunnel
+devtunnel user login
+devtunnel host -p 5062 --allow-anonymous
+```
+Open the `https://...devtunnels.ms` link it prints on the phone. The link works while this window stays open.
+
+### Reset before a demo
+The API rebuilds the database on start, so a reset gives clean real data and no saved readings:
+1. Stop the API (Ctrl+C).
+2. `Remove-Item backend/PowerCheck.Api/app.db*`
+3. Start the API again (step 2).
+
+### If something goes wrong
+| You see | Fix |
+|---|---|
+| "Can't reach the ... server" on the website | The API isn't running: do step 2. |
+| Numbers don't match the API / look like samples | `UseMockApi` is `true` in `frontend/PowerCheck.Web/appsettings.json`. Set it to `false`. |
+| "address already in use" | Another copy is running. Close that terminal (Ctrl+C) and try again. |
+| Old numbers after an update | Do the reset above so the new tables load. |
 
 ## Team
 | Name | Role |
