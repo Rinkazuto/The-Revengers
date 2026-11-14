@@ -1,6 +1,240 @@
 ﻿@page "/readings"
+@using System.Globalization
+@inject IPowerCheckApi Api
+@inject CalculationState State
+@inject ISnackbar Snackbar
 
-<PageTitle>Readings: Power Check</PageTitle>
+<PageTitle>Readings: ReVolt</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">My readings</MudText>
-<MudText>Save each month's kWh and see your trend. Coming soon.</MudText>
+<MudText Typo="Typo.h5">Your readings</MudText>
+<MudText Typo="Typo.body2" Class="mb-4">Last 6 months</MudText>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center my-8">
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    </div>
+}
+else if (_error is not null)
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Class="tap-48 mb-4" OnClick="LoadAsync">
+        Try again
+    </MudButton>
+}
+else if (_readings.Count == 0)
+{
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText>No readings yet. Add your first month below to start tracking your usage.</MudText>
+    </MudPaper>
+}
+else
+{
+    @* ---------- Bar chart: last 6 months, oldest on the left ---------- *@
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <div class="bar-chart">
+            @foreach (var reading in _readings.TakeLast(6))
+            {
+                <div class="bar-col">
+                    <span class="bar-value">@Kwh(reading.Kwh)</span>
+                    <div class="bar" style="@BarStyle(reading.Kwh)"></div>
+                    <span class="bar-label">@ShortMonth(reading.Month)</span>
+                </div>
+            }
+        </div>
+        <MudText Typo="Typo.caption" Class="d-block mt-2">kWh per month</MudText>
+    </MudPaper>
+
+    @* ---------- Trend vs the previous saved month ---------- *@
+    @if (TrendText is not null)
+    {
+        <div class="d-flex align-center mb-4">
+            <MudIcon Icon="@TrendIcon" Color="@TrendColor" Class="mr-2" />
+            <MudText Typo="Typo.h6">@TrendText</MudText>
+        </div>
+    }
+
+    @* ---------- List: newest first ---------- *@
+    <MudPaper Class="mb-4" Elevation="1">
+        @foreach (var reading in _readings.AsEnumerable().Reverse())
+        {
+            <div class="reading-row d-flex justify-space-between align-center px-4 py-2">
+                <div>
+                    <MudText>@LongMonth(reading.Month)</MudText>
+                    <MudText Typo="Typo.caption">Bill about Rs @Rs(reading.BillRs) (tariff 110)</MudText>
+                </div>
+                <MudText><b>@Kwh(reading.Kwh) kWh</b></MudText>
+            </div>
+            <MudDivider />
+        }
+    </MudPaper>
+}
+
+@* ---------- Add reading: button, or the form when open ---------- *@
+@if (!_adding)
+{
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
+               Class="tap-48" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenForm">
+        Add reading
+    </MudButton>
+}
+else
+{
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h6" Class="mb-2">Add a reading</MudText>
+
+        <MudSelect T="string" @bind-Value="_newMonth" Label="Month"
+                   Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Class="mb-4">
+            @foreach (var month in RecentMonths)
+            {
+                <MudSelectItem T="string" Value="@month">@LongMonth(month)</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudNumericField T="decimal?" @bind-Value="_newKwh"
+                         Label="Units used (from your CEB bill)"
+                         Adornment="Adornment.End" AdornmentText="kWh"
+                         HideSpinButtons="true" InputMode="InputMode.numeric"
+                         Variant="Variant.Outlined" Class="mb-2" />
+
+        <MudText Typo="Typo.caption" Class="d-block mb-4">Saving a month again replaces its old reading.</MudText>
+
+        @if (_formError is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_formError</MudAlert>
+        }
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                   Class="tap-48 mb-2" Disabled="_saving" OnClick="SaveAsync">
+            @(_saving ? "Saving…" : "Save reading")
+        </MudButton>
+        <MudButton Variant="Variant.Text" FullWidth="true" Class="tap-48" Disabled="_saving" OnClick="CloseForm">
+            Cancel
+        </MudButton>
+    </MudPaper>
+}
+
+@code {
+    private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+    private const double MaxBarPx = 110;
+
+    private List<ReadingDto> _readings = new();   // oldest → newest (as the API sends them)
+    private bool _loading;
+    private string? _error;
+
+    private bool _adding;
+    private bool _saving;
+    private string _newMonth = ThisMonth;
+    private decimal? _newKwh;
+    private string? _formError;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            var response = await Api.GetReadingsAsync();
+            _readings = response.Readings;
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OpenForm()
+    {
+        _adding = true;
+        _formError = null;
+        _newMonth = ThisMonth;
+        _newKwh = State.MonthlyKwh;   // pre-fill with the kWh from the Bill page, if any
+    }
+
+    private void CloseForm() => _adding = false;
+
+    private async Task SaveAsync()
+    {
+        _formError = null;
+        if (_newKwh is null) { _formError = "Enter the units (kWh) from your CEB bill."; return; }
+        if (_newKwh < 0 || _newKwh > 5000) { _formError = "Enter a number between 0 and 5000 kWh."; return; }
+
+        _saving = true;
+        try
+        {
+            await Api.SaveReadingAsync(new ReadingRequest(_newMonth, _newKwh.Value));
+            Snackbar.Add($"Saved your reading for {LongMonth(_newMonth)}.", Severity.Success);
+            _adding = false;
+            await LoadAsync();   // refresh the chart, trend and list
+        }
+        catch (ApiException ex)
+        {
+            _formError = ex.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    // ---------- Trend: compare the last two saved months ----------
+    private string? TrendText
+    {
+        get
+        {
+            if (_readings.Count < 2) return null;
+            var previous = _readings[^2];
+            var last = _readings[^1];
+            var vs = $"vs {ShortMonth(previous.Month)} {previous.Month[..4]}";
+
+            if (last.Kwh == previous.Kwh) return $"Same as {ShortMonth(previous.Month)} {previous.Month[..4]}";
+            var direction = last.Kwh > previous.Kwh ? "Up" : "Down";
+            if (previous.Kwh == 0) return $"{direction} {vs}";
+
+            var percent = Math.Abs((last.Kwh - previous.Kwh) / previous.Kwh * 100);
+            return $"{direction} {percent.ToString("0", Inv)}% {vs}";
+        }
+    }
+
+    private bool UsageUp => _readings.Count >= 2 && _readings[^1].Kwh > _readings[^2].Kwh;
+    private bool UsageDown => _readings.Count >= 2 && _readings[^1].Kwh < _readings[^2].Kwh;
+
+    private string TrendIcon =>
+        UsageUp ? Icons.Material.Filled.TrendingUp
+        : UsageDown ? Icons.Material.Filled.TrendingDown
+        : Icons.Material.Filled.TrendingFlat;
+
+    // Using more electricity is bad news (orange), using less is good news (green)
+    private Color TrendColor => UsageUp ? Color.Warning : UsageDown ? Color.Success : Color.Default;
+
+    // ---------- Chart: bar height in pixels, relative to the biggest of the 6 months ----------
+    private string BarStyle(decimal kwh)
+    {
+        var max = _readings.TakeLast(6).Max(r => r.Kwh);
+        var px = max == 0 ? 4 : Math.Max(4, (double)(kwh / max) * MaxBarPx);
+        return $"height: {px.ToString("0", Inv)}px";
+    }
+
+    // ---------- Months ----------
+    private static string ThisMonth => DateTime.Now.ToString("yyyy-MM", Inv);
+
+    // This month and the 11 before it (the API refuses future months)
+    private static IEnumerable<string> RecentMonths =>
+        Enumerable.Range(0, 12).Select(i => DateTime.Now.AddMonths(-i).ToString("yyyy-MM", Inv));
+
+    private static DateTime ParseMonth(string month) =>
+        DateTime.ParseExact(month, "yyyy-MM", Inv);
+
+    private static string ShortMonth(string month) => ParseMonth(month).ToString("MMM", Inv);        // "Oct"
+    private static string LongMonth(string month) => ParseMonth(month).ToString("MMMM yyyy", Inv);   // "October 2026"
+
+    // ---------- Numbers ----------
+    private static string Rs(decimal value) => value.ToString("N2", Inv);
+    private static string Kwh(decimal value) => value.ToString("0.##", Inv);
+}
