@@ -1,6 +1,6 @@
-# Power Check: Task Board
+# ReVolt: Task Board
 
-The live board is the **GitHub Project** in the repo's **Projects** tab. This file is the plan used to create it.
+The live board is the **GitHub Project** in the repo's **Projects** tab (still named "Power Check"). This file is the plan used to create it.
 **Owner:** Integrator. Each card below becomes one GitHub issue (New issue → Feature / Task) added to the project.
 
 ## Columns

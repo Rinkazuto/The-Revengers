@@ -1,6 +1,8 @@
-# Power Check
+# ReVolt
 
 Team **The Revengers**: Theme 3, *Powered to Live Better*.
+
+> The app started as "Power Check", so the code folders are still called `PowerCheck.Api` and `PowerCheck.Web`. Same app.
 
 ## Problem
 <!-- Who has the problem and what it is. Be specific (not "everyone in Mauritius"). -->
