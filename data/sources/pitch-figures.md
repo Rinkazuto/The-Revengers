@@ -65,13 +65,40 @@ The 200 kWh example in section 2 is close to the average Mauritian home.
 | Grant on a Rs 240,000 system | Rs 60,000 (25%) | Calculated |
 | Price range of all sizes | Rs 165,000 (1.5 kWp) to Rs 850,000 (15 kWp) | CEB solar price guide |
 
+## 5b. What solar does to the bill (tariff 150A)
+
+A home with solar moves to prosumer tariff 150A (single-phase) or 150B (three-phase), General Notice 473 of 2026, Appendix VIII. Figures from `tests/test-cases/solar_expected_results.csv`; all match the app.
+
+| Figure | Value | Source |
+|---|---|---|
+| Solar bill can't go below | Rs 211.60 a month (150A minimum for 76 to 300 kWh of total use) | General Notice 473 of 2026, Appendix VIII, page 2230 |
+| 200 kWh home, 3 kWp | Rs 1,216.75 → Rs 211.60 a month; saving Rs 1,005.15 | Calculated (SC-10) |
+| Export credit, 200 kWh home, 3 kWp | Rs 423.37 a month, shown separately, not counted in the saving | CEB leaflet, page 4 (Rs 3.00 per excess kWh) |
+| Install cost, 3 kWp | Rs 193,250 (Rs 255,000 middle of CEB range − Rs 63,750 grant + Rs 2,000 fee) | CEB price guide and leaflet |
+| Payback, 200 kWh home, 3 kWp | 16.0 years (panels lose 0.5% a year) | Calculated (SC-10) |
+| The 300 kWh trap, 1.5 kWp | 300 kWh → Rs 1,110.58; 301 kWh → Rs 1,569.18. One extra kWh adds Rs 458.60, because the flat Rs 8.58 rate stops at 300 kWh of total use | Calculated (SC-14, SC-15) |
+
+## 5c. Cyclone mode (surprise card)
+
+| Figure | Value | Source |
+|---|---|---|
+| Solar without a battery in a power cut | Must switch off within 0.2 seconds | CEB SSDG Grid Code, April 2026, section 2.5.1 |
+| Solar with a battery | Can keep running ("islanding mode") | CEB SSDG Grid Code, April 2026, section 2.5.2 |
+| Battery in CEB's price guide | 5 kWh | CEB solar price guide |
+| Energy the battery delivers | 4.89 kWh (5 kWh × 97.8% inverter efficiency) | Huawei LUNA2000 and SUN2000-5KTL-L1 specifications |
+| Fridge + Wi-Fi + 6 h of one LED light | Up to about 4 days (98.3 hours) | Calculated (CY-03) |
+| Fridge alone | Up to about 5.7 days (137.7 hours) | Calculated (CY-01) |
+| Strong wind levels | Force 8 "Gale" from 34 knots (62.968 km/h); force 10 "Storm" from 48 knots (88.896 km/h) | Met Office Beaufort scale |
+
+On screen and on slides, say "up to". The team's wording: "Assumes a new, fully charged battery. Real time is usually shorter: inverters lose more at small loads, and older batteries hold less."
+
 ## 6. Our data, for the "real dataset" question
 
 | Figure | Value |
 |---|---|
 | Official sources used | 11: CEB tariffs page, CEB 2023 tariff PDF, General Notice 1804 of 2022, General Notice 473 of 2026, Cabinet decisions of 10 April 2026, Statistics Mauritius 2025, CEB solar leaflet, CEB solar price guide, PVGIS, NASA POWER, VAT Act |
-| Rows of real data in the database | 60 tariff bands, 7 minimum charges, 2 meter rents, 15 solar scheme values, 12 system prices, 12 PVGIS months |
-| Expected bills used to test the app | 40, each recalculated by hand with 0 mismatches |
+| Rows of real data in the database | 60 tariff bands, 7 minimum charges, 2 meter rents, 15 solar scheme values, 12 system prices, 12 PVGIS months, 2 prosumer tariffs with 10 bands and 4 minimum charges |
+| Expected results used to test the app | 40 bills, 7 solar cases, 11 cyclone cases, each worked out separately from the app's code |
 
 ## Ready answers for judges
 
@@ -80,3 +107,6 @@ The 200 kWh example in section 2 is close to the average Mauritian home.
 - **"What happens when CEB changes the tariff again?"** Add the new rates to `tariff_tiers.csv` with the new start date. The app picks the newest rates automatically, and no code changes.
 - **"Why 113.71 kWh?"** PVGIS, the European Commission's solar model, using 2005 to 2023 satellite data for Mauritius with standard panel losses.
 - **"Why is the bill not rounded?"** The app shows the exact consumption charge. CEB rounds the final bill to the nearest rupee.
+- **"Why doesn't solar bring the bill to zero?"** A solar home moves to tariff 150A, which keeps a minimum charge set by total use: Rs 211.60 for 76 to 300 kWh (General Notice 473 of 2026, Appendix VIII). The export credit is shown separately.
+- **"Why 4 days on the battery?"** CEB prices every system with a 5 kWh battery. Huawei's inverter delivers 97.8% of it, 4.89 kWh. A fridge, Wi-Fi and one LED light use 1.19 kWh a day. We say "up to", because real batteries and small loads lose more.
+- **"Why does solar switch off in a cyclone?"** CEB's grid code, section 2.5.1: solar without a battery must disconnect within 0.2 seconds of a power cut. With a battery it can keep running (section 2.5.2).
