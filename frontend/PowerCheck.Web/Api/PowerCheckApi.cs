@@ -23,6 +23,12 @@ public class PowerCheckApi(HttpClient http) : IPowerCheckApi
     public Task<ReadingsResponse> GetReadingsAsync() =>
         SendAsync<ReadingsResponse>(() => http.GetAsync("api/readings"));
 
+    public Task<AppliancesResponse> GetAppliancesAsync() =>
+    SendAsync<AppliancesResponse>(() => http.GetAsync("api/cyclone/appliances"));
+
+    public Task<BackupResponse> CalculateBackupAsync(BackupRequest request) =>
+        SendAsync<BackupResponse>(() => http.PostAsJsonAsync("api/cyclone/backup", request));
+
     // One place that sends the request and turns every failure into a plain message.
     private static async Task<T> SendAsync<T>(Func<Task<HttpResponseMessage>> call)
     {
