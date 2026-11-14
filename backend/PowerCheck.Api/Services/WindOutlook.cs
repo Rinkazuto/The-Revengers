@@ -79,7 +79,10 @@ public static class WindOutlook
 
     private static OutlookResponse? TryOffline(IWebHostEnvironment env, CycloneValues values)
     {
-        var path = Path.Combine(env.ContentRootPath, "..", "..", "data", "sources", "raw", ForecastFile);
+        // Next to the app when published (e.g. on Azure), else the repo's data/sources/raw when run locally
+        var path = Path.Combine(env.ContentRootPath, "data", "sources", "raw", ForecastFile);
+        if (!File.Exists(path))
+            path = Path.Combine(env.ContentRootPath, "..", "..", "data", "sources", "raw", ForecastFile);
         if (!File.Exists(path))
             return null;
 
