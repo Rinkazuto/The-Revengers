@@ -1,6 +1,6 @@
 # Data sources
 
-Every figure in `data/seed/` and `tests/test-cases/` comes from an official source or is calculated from one. No figure is invented or rounded.
+Every figure in `data/seed/` and `tests/test-cases/` comes from a named, checkable source or is calculated from one. Tariff, solar scheme and statistics figures come from official sources (CEB, the Government Gazette, Statistics Mauritius). Cyclone appliance figures come from appliance labels and maker specifications. No figure is invented or rounded.
 
 ## Sources
 
@@ -10,7 +10,7 @@ Every figure in `data/seed/` and `tests/test-cases/` comes from an official sour
 | 2023 tariffs | Central Electricity Board, "Approved Tariff by the Utility Regulatory Authority", https://ceb.mu/docs/files/files/tariffs/CEBTARIFFS.pdf |
 | 2023 minimum charges | Government Gazette of Mauritius No. 154 of 17 December 2022, General Notice No. 1804 of 2022, Appendix I, pages 5005 to 5006. Copy read: https://ceb.mu/docs/files/files/tariffs/Tariff_Schedule_Feb2023_URA.pdf |
 | Domestic consumers and domestic sales | Statistics Mauritius, Economic and Social Indicators Issue No 1929, Energy and Water Statistics Year 2025, Table 11, page 18, https://statsmauritius.govmu.org/Documents/Statistics/ESI/2026/EI1929/Energy_Water_Yr25_050626.pdf |
-| Solar irradiance | NASA POWER daily API, latitude -20.25, longitude 57.55, parameter ALLSKY_SFC_SW_DWN |
+| Solar irradiance (cross-check only, not used in calculations) | NASA POWER daily API, latitude -20.25, longitude 57.55, parameter ALLSKY_SFC_SW_DWN. The app uses PVGIS for solar output |
 | 2026 household solar scheme terms | Central Electricity Board, Household Rooftop Solar Photovoltaic (PV) Scheme information leaflet, revised July 2026, https://ceb.mu/docs/files/files/application%20schemes/Information%20Leaflet%20on%20Household%20Rooftop%20Solar%20Photovoltaic%20Scheme.pdf |
 | Solar system prices and panel degradation | Central Electricity Board, "Solar PV Comparison" page, "Estimated price guide (with 5kWh battery)", https://ceb.mu/pv_calculator |
 | Solar yield per kWp | PVGIS 5.3, European Commission Joint Research Centre, https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=-20.25&lon=57.55&peakpower=1&loss=14&optimalangles=1&outputformat=json |
