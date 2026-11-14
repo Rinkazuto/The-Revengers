@@ -7,3 +7,6 @@ public record AppliancesResponse(List<ApplianceDto> Appliances);
 public record BackupApplianceRequest(string Id, decimal HoursPerDay);
 public record BackupRequest(List<BackupApplianceRequest>? Appliances, decimal? BatteryKwh);
 public record BackupResponse(decimal KwhPerDay, decimal BatteryKwh, decimal HoursCovered, string Message, List<string> Assumptions);
+
+public record OutlookResponse(string Level, decimal MaxWindKmh, decimal MaxGustKmh, DateTime MaxWindAtUtc, string Advice,
+    bool IsOffline, DateTime FetchedAtUtc, string Source);
