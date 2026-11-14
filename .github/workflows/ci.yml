@@ -1,5 +1,5 @@
 # CI: runs on every PR into submain or main, and on every push to them.
-# 1. Builds both projects (PowerCheck.slnx).
+# 1. Builds everything in PowerCheck.slnx and runs the 36 data integrity tests (data/seed).
 # 2. Starts the API on a fresh database and checks 16 real results from the CEB data
 #    (bill, 400s, solar incl. the 150A/150B with-solar bill, readings).
 # A red X on the PR means: don't merge yet.
@@ -30,8 +30,11 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      - name: Build API + website
+      - name: Build API + website + tests
         run: dotnet build PowerCheck.slnx -c Release
+
+      - name: Data integrity tests (data/seed)
+        run: dotnet test tests/PowerCheck.DataTests -c Release --no-build
 
       - name: Start the API (fresh database, seeded from data/seed)
         run: |
