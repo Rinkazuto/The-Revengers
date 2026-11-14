@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 130" width="512" height="512"><title>ReVolt app icon</title><rect width="130" height="130" rx="28" fill="#2E9E4F"/><g transform="translate(7,8)">
+<circle cx="97" cy="22" r="12" fill="#F7C61A"/>
+<polygon points="18.7,53.5 42.7,32.6 36.1,25.1 12.1,46" fill="#F7C61A" stroke="#F7C61A" stroke-width="2" stroke-linejoin="round"/>
+<line x1="30.7" y1="43" x2="24.1" y2="35.5" stroke="#FFFFFF" stroke-width="2"/>
+<path d="M12 66 L58 26 L104 66 M24 56 V108 H92 V56" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M62 62 L46 87 H58 L53 104 L72 78 H60 Z" fill="#F7C61A" stroke="#F7C61A" stroke-width="2" stroke-linejoin="round"/>
+</g></svg>
