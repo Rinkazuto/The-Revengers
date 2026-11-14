@@ -224,7 +224,7 @@ Sections 6 and 7 work **offline**. Section 8 calls OpenWeather but always answer
 
 ## 6. GET `/api/cyclone/appliances`
 
-Common home appliances with their power. Today the list is in `Services/CycloneData.cs`; it moves to `data/seed/` once every value is sourced by the Data Lead.
+Common home appliances with their power, read from the Data Lead's sourced file `data/seed/cyclone_appliances.csv` (#112). Change a number there and the API changes too.
 
 > **Sourced values** (Data Lead, `data/seed/cyclone_*.csv`): fridge **35.5 W** average (Samsung RB29FERNDSA energy label, 311 kWh/year, sold by Courts Mammouth); usable battery **97.8%** of 5 kWh (Huawei SUN2000-5KTL-L1 weighted efficiency, decision log row 13). The result is shown as **"up to"** with the caveat: "Assumes a new, fully charged battery. Real time is usually shorter: inverters lose more at small loads, and older batteries hold less."
 
@@ -232,13 +232,14 @@ Common home appliances with their power. Today the list is in `Services/CycloneD
 ```json
 {
   "appliances": [
-    { "id": "fridge", "name": "Fridge", "watts": 0, "source": "..." },
-    { "id": "lights", "name": "LED lights", "watts": 0, "source": "..." },
-    { "id": "wifi",   "name": "Wi-Fi router", "watts": 0, "source": "..." }
+    { "id": "fridge",      "name": "Fridge",               "watts": 0, "source": "..." },
+    { "id": "led_light",   "name": "LED light (one bulb)", "watts": 0, "source": "..." },
+    { "id": "wifi_router", "name": "Wi-Fi router",         "watts": 0, "source": "..." }
   ]
 }
 ```
 - Every `watts` value has a `source`. No unsourced "typical" values.
+- The list and the watts come from `data/seed/cyclone_appliances.csv` (the one source of truth). The 7 ids are: `fridge`, `tv`, `laptop`, `ceiling_fan`, `wifi_router`, `phone_charger`, `led_light`.
 
 ## 7. POST `/api/cyclone/backup`
 
@@ -246,7 +247,7 @@ How long a battery keeps the chosen appliances running during a power cut.
 
 **Request**
 ```json
-{ "appliances": [ { "id": "fridge", "hoursPerDay": 24 }, { "id": "wifi", "hoursPerDay": 24 } ], "batteryKwh": 5 }
+{ "appliances": [ { "id": "fridge", "hoursPerDay": 24 }, { "id": "wifi_router", "hoursPerDay": 24 } ], "batteryKwh": 5 }
 ```
 | Field | Rule → 400 if broken |
 |---|---|
