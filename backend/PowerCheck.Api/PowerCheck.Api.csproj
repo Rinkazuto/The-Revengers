@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>fe18f612-d457-42ff-866a-f6c49414495f</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +15,12 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.*" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="11.0.1" />
+  </ItemGroup>
+
+  <!-- When publishing (e.g. to Azure), copy the repo's data/seed CSVs next to the app as data/seed,
+       so the database is filled on the server too. Local runs still read ../../data/seed. -->
+  <ItemGroup>
+    <None Include="..\..\data\seed\**\*.csv" Link="data\seed\%(RecursiveDir)%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" CopyToOutputDirectory="Never" />
   </ItemGroup>
 
 </Project>

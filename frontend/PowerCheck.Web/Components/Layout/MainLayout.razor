@@ -35,14 +35,13 @@
 </MudLayout>
 
 @code {
-    // ReVolt colours from the new wireframes.
-    // Placeholders picked from the images: replace with the designer's exact hex codes (only here).
+        // ReVolt colours (logo SVGs in docs/logo + Integrator's readability check).
     private readonly MudTheme _theme = new()
     {
         PaletteLight = new PaletteLight
         {
-            Primary = "#2E9E4F",                 // green: main buttons, active tab, chart bars
-            Secondary = "#F5C518",               // yellow: "See solar savings", "Get started", highlights
+            Primary = "#2E7D32",                 // dark green: buttons with white text, active tab (readable: 4.5:1)
+            Secondary = "#F7C61A",               // logo yellow: "See solar savings", highlights (always dark text on it) 
             SecondaryContrastText = "#0F3D24",   // dark text on the yellow buttons
             Tertiary = "#0F3D24",                // dark green: big result cards, Welcome screen
         }

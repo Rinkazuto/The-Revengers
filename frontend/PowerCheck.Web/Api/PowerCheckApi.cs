@@ -23,6 +23,12 @@ public class PowerCheckApi(HttpClient http) : IPowerCheckApi
     public Task<ReadingsResponse> GetReadingsAsync() =>
         SendAsync<ReadingsResponse>(() => http.GetAsync("api/readings"));
 
+    public Task<AppliancesResponse> GetAppliancesAsync() =>
+    SendAsync<AppliancesResponse>(() => http.GetAsync("api/cyclone/appliances"));
+
+    public Task<BackupResponse> CalculateBackupAsync(BackupRequest request) =>
+        SendAsync<BackupResponse>(() => http.PostAsJsonAsync("api/cyclone/backup", request));
+
     // One place that sends the request and turns every failure into a plain message.
     private static async Task<T> SendAsync<T>(Func<Task<HttpResponseMessage>> call)
     {
@@ -33,7 +39,7 @@ public class PowerCheckApi(HttpClient http) : IPowerCheckApi
         }
         catch (HttpRequestException)
         {
-            throw new ApiException("Can't reach the Power Check server. Check your connection and try again.");
+            throw new ApiException("Can't reach the ReVolt server. Check your connection and try again.");
         }
         catch (TaskCanceledException)
         {

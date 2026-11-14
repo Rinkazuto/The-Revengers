@@ -96,6 +96,42 @@ public class MockPowerCheckApi : IPowerCheckApi
         return new ReadingsResponse(sorted, trend);
     }
 
+    // ---------- Cyclone (FAKE: same appliances as the seed file, but don't use in the demo) ----------
+    private static readonly List<ApplianceDto> FakeAppliances =
+    [
+        new("fridge", "Fridge", 35.5m, "FAKE data"),
+        new("tv", "TV (flat screen)", 120m, "FAKE data"),
+        new("laptop", "Laptop", 50m, "FAKE data"),
+        new("ceiling_fan", "Ceiling fan", 175m, "FAKE data"),
+        new("wifi_router", "Wi-Fi router", 12m, "FAKE data"),
+        new("phone_charger", "USB-C charger (phone or laptop)", 35m, "FAKE data"),
+        new("led_light", "LED light (one bulb)", 9m, "FAKE data"),
+    ];
+
+    public async Task<AppliancesResponse> GetAppliancesAsync()
+    {
+        await Task.Delay(400);
+        return new AppliancesResponse(FakeAppliances);
+    }
+
+    public async Task<BackupResponse> CalculateBackupAsync(BackupRequest request)
+    {
+        await Task.Delay(400);
+        var chosen = request.Appliances ?? [];
+        if (chosen.Count == 0 || chosen.Sum(a => a.HoursPerDay) == 0)
+            throw new ApiException("Choose at least one appliance with more than 0 hours a day.");
+
+        var batteryKwh = request.BatteryKwh ?? 5m;
+        var usableKwh = batteryKwh * 0.8m;   // FAKE: 80% usable, like the backend
+        var kwhPerDay = chosen.Sum(a => FakeAppliances.First(f => f.Id == a.Id).Watts * a.HoursPerDay / 1000);
+        var hours = Math.Round(usableKwh / kwhPerDay * 24, 1);
+
+        return new BackupResponse(
+            Math.Round(kwhPerDay, 2), batteryKwh, hours,
+            $"FAKE: your {batteryKwh:0.##} kWh battery keeps these running for about {hours:0.#} hours.",
+            ["FAKE data: usable battery 80%"]);
+    }
+
     // Splits the kWh across the bands, like the real backend does.
     private static BillResponse Bill(decimal kwh)
     {
