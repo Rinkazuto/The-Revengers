@@ -1,6 +1,7 @@
 # CI: runs on every PR into submain or main, and on every push to them.
 # 1. Builds both projects (PowerCheck.slnx).
-# 2. Starts the API on a fresh database and checks real numbers from the CEB data.
+# 2. Starts the API on a fresh database and checks 16 real results from the CEB data
+#    (bill, 400s, solar incl. the 150A/150B with-solar bill, readings).
 # A red X on the PR means: don't merge yet.
 
 name: CI
@@ -65,6 +66,14 @@ jobs:
           without=$(curl -sf -X POST http://localhost:5012/api/solar/estimate -H "Content-Type: application/json" -d '{"monthlyKwh":200,"systemSizeKwp":3}' | jq -r .withoutSolar.monthlyBillRs)
           check "solar without = bill"    "1216.75" "$without"
           check "solar size 3.3"          "400" "$(status /api/solar/estimate '{"monthlyKwh":200,"systemSizeKwp":3.3}')"
+
+          # Solar on prosumer tariff 150A/150B (GN 473/2026). Money compared in cents so 211.6 and 211.60 both match.
+          solar() { curl -sf -X POST http://localhost:5012/api/solar/estimate -H "Content-Type: application/json" -d "$1" | jq -r "$2 * 100 | round"; }
+          check "150A: 200 kWh + 3 kWp with-solar bill (cents)"  "21160"  "$(solar '{"monthlyKwh":200,"systemSizeKwp":3}' .withSolar.monthlyBillRs)"
+          check "150A: 200 kWh + 3 kWp savings (cents)"          "100515" "$(solar '{"monthlyKwh":200,"systemSizeKwp":3}' .monthlySavingsRs)"
+          check "150A: 50 kWh minimum Rs 50.60 (cents)"          "5060"   "$(solar '{"monthlyKwh":50,"systemSizeKwp":3}' .withSolar.monthlyBillRs)"
+          check "150B: three-phase minimum Rs 424.35 (cents)"    "42435"  "$(solar '{"monthlyKwh":200,"systemSizeKwp":3,"phase":"three"}' .withSolar.monthlyBillRs)"
+          check "phase x"                                        "400"    "$(status /api/solar/estimate '{"monthlyKwh":200,"phase":"x"}')"
 
           # Readings
           check "save reading"            "201" "$(status /api/readings '{"month":"2026-01","kwh":200}')"
