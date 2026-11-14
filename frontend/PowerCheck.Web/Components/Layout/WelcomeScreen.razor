@@ -1,0 +1,26 @@
+﻿@* Welcome screen (wireframe 1). Shown on top of the app when it opens; "Get started" closes it. *@
+
+<div class="welcome">
+    <div class="welcome-middle">
+        <img src="favicon.svg" alt="ReVolt logo" class="welcome-logo" />
+
+        <h1 class="welcome-title">Re<span class="v">V</span>olt</h1>
+
+        <p class="welcome-tagline">
+            Know what your CEB bill really costs, and what solar could save your family.
+        </p>
+    </div>
+
+    <div class="welcome-bottom">
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true" Size="Size.Large"
+                   Class="tap-48" OnClick="OnStart">
+            Get started
+        </MudButton>
+        <p class="welcome-note">No account needed</p>
+    </div>
+</div>
+
+@code {
+    // MainLayout passes in what to do when "Get started" is tapped (close this screen)
+    [Parameter] public EventCallback OnStart { get; set; }
+}
