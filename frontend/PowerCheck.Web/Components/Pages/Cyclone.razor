@@ -9,6 +9,20 @@
 
 @* Optional: ONE Kreol line here, written/checked by a native speaker (team decision: no EN/KR switch). *@
 
+@* ---------- 48-hour wind outlook (OpenWeather), turned into battery advice ---------- *@
+@if (_outlook is not null)
+{
+    <MudAlert Severity="@OutlookSeverity(_outlook.Level)" Icon="@Icons.Material.Filled.Air" Class="mb-4">
+        <MudText Typo="Typo.body1"><b>@OutlookTitle(_outlook.Level)</b></MudText>
+        <MudText Typo="Typo.body2">@_outlook.Advice</MudText>
+        <MudText Typo="Typo.caption" Class="d-block mt-1">
+            @(_outlook.IsOffline
+                ? $"Last saved forecast from {MauritiusTime(_outlook.FetchedAtUtc)} (offline)"
+                : $"OpenWeather forecast · updated {MauritiusTime(_outlook.FetchedAtUtc)}")
+        </MudText>
+    </MudAlert>
+}
+
 @if (_loadingAppliances)
 {
     <div class="d-flex justify-center my-8">
@@ -139,7 +153,44 @@ else
     private string? _calcError;
     private int _requestNumber;   // only the newest answer is shown, if the user taps quickly
 
-    protected override async Task OnInitializedAsync() => await LoadAppliancesAsync();
+        private OutlookResponse? _outlook;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var outlookTask = LoadOutlookAsync();   // starts at the same time as the appliances
+        await LoadAppliancesAsync();
+        await outlookTask;
+    }
+
+    private async Task LoadOutlookAsync()
+    {
+        try
+        {
+            _outlook = await Api.GetOutlookAsync();
+        }
+        catch (ApiException)
+        {
+            _outlook = null;   // the banner is extra: if it fails, the rest of the page still works
+        }
+    }
+
+    // ok = green, charge (gale, from 62.97 km/h) = yellow, chargeNow (storm, from 88.90 km/h) = red
+    private static Severity OutlookSeverity(string level) => level switch
+    {
+        "chargeNow" => Severity.Error,
+        "charge" => Severity.Warning,
+        _ => Severity.Success,
+    };
+
+    private static string OutlookTitle(string level) => level switch
+    {
+        "chargeNow" => "Storm-force winds expected",
+        "charge" => "Strong winds expected",
+        _ => "No strong winds in the next 48 hours",
+    };
+
+    // The API sends UTC; Mauritius is UTC+4 all year (no daylight saving)
+    private static string MauritiusTime(DateTime utc) => utc.AddHours(4).ToString("ddd d MMM, HH:mm", Inv);
 
     private async Task LoadAppliancesAsync()
     {
