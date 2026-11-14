@@ -15,6 +15,18 @@ public static class CycloneEndpoints
         api.MapGet("/appliances", (IWebHostEnvironment env) =>
             Results.Ok(new AppliancesResponse(CycloneData.Get(env).Appliances)));
 
+        // GET /api/cyclone/outlook -> next 48 hours of wind, turned into battery advice (not a cyclone warning)
+        api.MapGet("/outlook", async (IHttpClientFactory httpFactory, IConfiguration config, IWebHostEnvironment env) =>
+        {
+            var outlook = await WindOutlook.GetAsync(httpFactory, config, env, CycloneData.Get(env));
+
+            return outlook is null
+                ? Results.Problem(
+                    "The wind forecast is not available right now (no connection to OpenWeather and no saved forecast).",
+                    statusCode: StatusCodes.Status503ServiceUnavailable)
+                : Results.Ok(outlook);
+        });
+
         // POST /api/cyclone/backup -> send appliances + hours a day, get how long the battery lasts
         api.MapPost("/backup", (BackupRequest request, AppDbContext db, IWebHostEnvironment env) =>
         {

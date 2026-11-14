@@ -7,7 +7,9 @@ using Microsoft.VisualBasic.FileIO;
 //   data/seed/cyclone_reference_values.csv  (battery and inverter figures)
 // Change a number there and the app changes too. No code edits needed.
 
-public record CycloneValues(List<ApplianceDto> Appliances, decimal UsableBatteryPercent, string UsableBatterySource);
+public record CycloneValues(
+    List<ApplianceDto> Appliances, decimal UsableBatteryPercent, string UsableBatterySource,
+    decimal GaleKmh, decimal StormKmh, string BeaufortSource);
 
 public static class CycloneData
 {
@@ -47,7 +49,14 @@ public static class CycloneData
         var usableSource =
             $"{battery["source"]}; {efficiency["source"]}: \"European weighted efficiency {usablePercent:0.##}%\"";
 
-        return new CycloneValues(appliances, usablePercent, usableSource);
+        // 3. Wind levels for the outlook: Beaufort force 8 (gale) and force 10 (storm), in km/h
+        var gale = reference["beaufort_force_8_min_kmh"];
+        var storm = reference["beaufort_force_10_min_kmh"];
+        var galeKmh = decimal.Parse(gale["value"], CultureInfo.InvariantCulture);
+        var stormKmh = decimal.Parse(storm["value"], CultureInfo.InvariantCulture);
+        var beaufortSource = $"{reference["beaufort_force_8_min_knots"]["source"]}: gale from {galeKmh:0.##} km/h, storm from {stormKmh:0.##} km/h";
+
+        return new CycloneValues(appliances, usablePercent, usableSource, galeKmh, stormKmh, beaufortSource);
     }
 
     // "Samsung RB29FERNDSA…; Courts Mammouth, Mauritius; Courts Mammouth product page… (Average: energy label…)"
