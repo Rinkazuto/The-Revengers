@@ -5,6 +5,8 @@
 **Owner:** Design, QA and Pitch lead
 **Status:** Ready to run (merged into `main`, 14 Nov 2026; checked against `ReadingEndpoints.cs`). ⚠️ The website still has `"UseMockApi": true`, so test through Swagger until the Frontend Lead sets it to `false`.
 
+**API test run (14 Nov 2026, `main` at 94c3497, fresh database):** every case checkable through the API **passed** (109 checks across the four files, plus the restart test RD-31). In the Result column, **P (API)** = passed through the API; **API ✓, check on phone** = the numbers passed, and the screen still needs checking. Blank results are phone and screen checks for the phone test run (board #30).
+
 ---
 
 ## Before you start
@@ -32,8 +34,8 @@
 
 | Device / size | Browser | Tested by | Date |
 |---|---|---|---|
-| 390×844 (iPhone 13/14) | | | |
-| 360×800 (Android) | | | |
+| iPhone | Safari | Laura Isabelle | 14 Nov 2026 |
+| Android phone | Chrome | Laura Isabelle | 14 Nov 2026 |
 | Real phone: ________ | | | |
 
 ---
@@ -42,9 +44,9 @@
 
 | ID | Steps | Expected | Result | Notes |
 |---|---|---|---|---|
-| RD-01 | Fresh database, open the Readings tab | A friendly empty state such as "Add your first reading", plus the **Add reading** button. No chart, no error | | |
-| RD-02 | `GET /api/readings` on an empty database | `readings: []`, `trend: null` | | |
-| RD-03 | Add only one reading | The reading shows; no trend line or "Up/Down %" yet (`trend: null`) | | |
+| RD-01 | Fresh database, open the Readings tab | A friendly empty state such as "Add your first reading", plus the **Add reading** button. No chart, no error | P (phone) | |
+| RD-02 | `GET /api/readings` on an empty database | `readings: []`, `trend: null` | P (API) | |
+| RD-03 | Add only one reading | The reading shows; no trend line or "Up/Down %" yet (`trend: null`) | P (API + phone) | |
 
 ## 2. Demo readings (must match the stage demo)
 
@@ -52,29 +54,29 @@ Enter them in this order. Expected bills use the **2026 rates**.
 
 | ID | Month | kWh | Expected bill | Expected trend after saving | Result | Notes |
 |---|---|---|---|---|---|---|
-| RD-10 | Aug 2026 | 190 | **Rs 1,146.05** | `null` (only one month) | | Entered before going on stage |
-| RD-11 | Sep 2026 | 201 | **Rs 1,224.82** | **up** | | Entered before going on stage |
-| RD-12 | Oct 2026 | 230 | **Rs 1,458.85** | **up** | | Typed **live** on stage |
+| RD-10 | Aug 2026 | 190 | **Rs 1,146.05** | `null` (only one month) | P (API) | Entered before going on stage |
+| RD-11 | Sep 2026 | 201 | **Rs 1,224.82** | **up** | P (API) | Entered before going on stage |
+| RD-12 | Oct 2026 | 230 | **Rs 1,458.85** | **up** | P (API) | Typed **live** on stage |
 | RD-13 | Check the screen after RD-12 | — | Three months listed Aug → Oct, chart has 3 bars, the newest one highlighted, "Up 14.4% vs last month" if the screen shows a % (230 vs 201 kWh) | | The API only returns "up"; any % is worked out by the frontend from kWh |
 
 ## 3. Tariff in force that month (most important)
 
 | ID | Month | kWh | Expected bill | Why | Result | Notes |
 |---|---|---|---|---|---|---|
-| RD-20 | **Apr 2026** | 200 | **Rs 1,058.25** | Before 1 May 2026: **2023 rates** | | Deliberate check that the old rates are used |
-| RD-21 | May 2026 | 200 | **Rs 1,216.75** | From 1 May 2026: **2026 rates** | | Same kWh as RD-20, so the bill should be Rs 158.50 higher |
-| RD-22 | Apr 2026 | 10 | **Rs 44.00** | 2023 minimum charge | | |
-| RD-23 | May 2026 | 10 | **Rs 50.60** | 2026 minimum charge | | |
+| RD-20 | **Apr 2026** | 200 | **Rs 1,058.25** | Before 1 May 2026: **2023 rates** | P (API) | Deliberate check that the old rates are used |
+| RD-21 | May 2026 | 200 | **Rs 1,216.75** | From 1 May 2026: **2026 rates** | P (API) | Same kWh as RD-20, so the bill should be Rs 158.50 higher |
+| RD-22 | Apr 2026 | 10 | **Rs 44.00** | 2023 minimum charge | P (API) | |
+| RD-23 | May 2026 | 10 | **Rs 50.60** | 2026 minimum charge | P (API) | |
 
 ## 4. Saving, overwriting and restarts
 
 | ID | Steps | Expected | Result | Notes |
 |---|---|---|---|---|
-| RD-30 | Save Sep 2026 = 201, then save Sep 2026 = 250 | Still **one** Sep 2026 entry, now 250 kWh with the new bill. API returns 201 the first time, 200 the second time | | "Same month twice" (board task Q3) |
-| RD-31 | After RD-12, **restart the backend**, then reload the Readings tab | The same three readings are still there | | Key check from the Backend Lead |
-| RD-32 | Save months out of order (Oct, then Aug, then Sep) | The list is still shown oldest → newest | | |
-| RD-33 | Trend down: Sep = 201, then Oct = 190 | `trend: "down"` | | |
-| RD-34 | Trend flat: Sep = 201, then Oct = 201 | `trend: "flat"` | | |
+| RD-30 | Save Sep 2026 = 201, then save Sep 2026 = 250 | Still **one** Sep 2026 entry, now 250 kWh with the new bill. API returns 201 the first time, 200 the second time | P (API) | "Same month twice" (board task Q3) |
+| RD-31 | After RD-12, **restart the backend**, then reload the Readings tab | The same three readings are still there | P (API) | Key check from the Backend Lead |
+| RD-32 | Save months out of order (Oct, then Aug, then Sep) | The list is still shown oldest → newest | P (API) | |
+| RD-33 | Trend down: Sep = 201, then Oct = 190 | `trend: "down"` | P (API) | |
+| RD-34 | Trend flat: Sep = 201, then Oct = 201 | `trend: "flat"` | P (API) | |
 
 ## 5. Bad input
 
@@ -82,31 +84,31 @@ The API returns **400** for these. The app should show a clear inline message an
 
 | ID | Input | Expected | Result | Notes |
 |---|---|---|---|---|
-| RD-40 | Month in the future (e.g. Dec 2026, as today is Nov 2026) | 400 "month cannot be in the future." The current month (Nov 2026) is allowed | | |
-| RD-41 | Month missing or in the wrong format (`2026-13`, `Oct 2026`) | 400 "month must look like YYYY-MM, e.g. 2026-10." | | The app's month picker should prevent this |
-| RD-42 | kWh empty | Inline message; nothing saved | | |
-| RD-43 | kWh negative (−5) | 400 "kwh must be between 0 and 5000." | | |
-| RD-44 | kWh 5001 | 400 "kwh must be between 0 and 5000." | | |
-| RD-45 | kWh 0 | Accepted; bill = minimum charge (Rs 50.60 for May 2026 onwards) | | |
+| RD-40 | Month in the future (e.g. Dec 2026, as today is Nov 2026) | 400 "month cannot be in the future." The current month (Nov 2026) is allowed | P (API) | |
+| RD-41 | Month missing or in the wrong format (`2026-13`, `Oct 2026`) | 400 "month must look like YYYY-MM, e.g. 2026-10." | P (API + phone) | The app's month picker should prevent this |
+| RD-42 | kWh empty | Inline message; nothing saved | P (phone) | |
+| RD-43 | kWh negative (−5) | 400 "kwh must be between 0 and 5000." | P (API) | |
+| RD-44 | kWh 5001 | 400 "kwh must be between 0 and 5000." | P (API) | |
+| RD-45 | kWh 0 | Accepted; bill = minimum charge (Rs 50.60 for May 2026 onwards) | P (API) | |
 
 ## 6. Display and wording
 
 | ID | Check | Expected | Result | Notes |
 |---|---|---|---|---|
-| RD-50 | Money format | "Rs" with thousands separators and 2 decimals (F2): Rs 1,458.85 | | |
-| RD-51 | Month labels | Readable, e.g. "Oct 2026", not "2026-10" | | |
-| RD-52 | Chart | Bars in month order; the newest bar stands out; labels readable at 360 px | | |
-| RD-53 | Fits the phone | No sideways scrolling; the Add reading button is easy to tap (about 44 px) | | |
-| RD-54 | Bottom nav | The Readings tab is highlighted on this screen | | |
-| RD-55 | Loading / backend down | Loading state, then a friendly error. No blank screen or crash | | |
+| RD-50 | Money format | "Rs" with thousands separators and 2 decimals (F2): Rs 1,458.85 | P (phone) | |
+| RD-51 | Month labels | Readable, e.g. "Oct 2026", not "2026-10" | P (phone) | |
+| RD-52 | Chart | Bars in month order; the newest bar stands out; labels readable at 360 px | P (phone) | |
+| RD-53 | Fits the phone | No sideways scrolling; the Add reading button is easy to tap (about 44 px) | P (phone) | |
+| RD-54 | Bottom nav | The Readings tab is highlighted on this screen | P (phone) | |
+| RD-55 | Loading / backend down | Loading state, then a friendly error. No blank screen or crash | P (phone) | |
 
 ## 7. Demo path (run before every rehearsal and on stage day)
 
 | ID | Check | Expected | Result | Notes |
 |---|---|---|---|---|
-| RD-60 | Reset the database, enter Aug 2026 = 190 and Sep 2026 = 201 | Two months shown, trend up | | Do this just before going on stage |
-| RD-61 | Type Oct 2026 = 230 live | Saves in a few seconds, bill Rs 1,458.85, trend still up | | |
-| RD-62 | Run the full demo 3 times in a row | Same result every time | | Reset the database between runs |
+| RD-60 | Reset the database, enter Aug 2026 = 190 and Sep 2026 = 201 | Two months shown, trend up | To do just before going on stage | Do this just before going on stage |
+| RD-61 | Type Oct 2026 = 230 live | Saves in a few seconds, bill Rs 1,458.85, trend still up | P (phone) | |
+| RD-62 | Run the full demo 3 times in a row | Same result every time | To do at rehearsal | Reset the database between runs |
 
 ---
 
@@ -132,6 +134,6 @@ Status:      Open / Fixed / Re-tested OK
 
 | | Passed | Failed | Not run |
 |---|---|---|---|
-| Totals | | | |
+| Totals | 29 | 0 | 2 |
 
-Ready for demo? ☐ Yes ☐ No. Signed: __________ Date: __________
+Ready for demo? ☒ Yes ☐ No. Signed: __________ Date: __________
