@@ -9,4 +9,8 @@ public interface IPowerCheckApi
     Task<SolarResponse> EstimateSolarAsync(SolarRequest request);       // POST /api/solar/estimate
     Task<ReadingDto> SaveReadingAsync(ReadingRequest request);          // POST /api/readings
     Task<ReadingsResponse> GetReadingsAsync();                          // GET  /api/readings
+
+    // Cyclone mode (surprise card "Made for Mauritius")
+    Task<AppliancesResponse> GetAppliancesAsync();                      // GET  /api/cyclone/appliances
+    Task<BackupResponse> CalculateBackupAsync(BackupRequest request);   // POST /api/cyclone/backup                          // GET  /api/readings
 }
