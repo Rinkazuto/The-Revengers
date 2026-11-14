@@ -5,6 +5,8 @@
 **Owner:** Design, QA and Pitch lead
 **Status:** Ready to run. All backend fixes are on `main` (14 Nov 2026), and the team reports all 11 cases CY-01 to CY-95 pass. The wind outlook is built and works offline from a saved forecast (CY-30 to CY-38). The website uses the real API (`"UseMockApi": false`).
 
+**API test run (14 Nov 2026, `main` at 94c3497, fresh database):** every case checkable through the API **passed** (109 checks across the four files, plus the restart test RD-31). In the Result column, **P (API)** = passed through the API; **API ✓, check on phone** = the numbers passed, and the screen still needs checking. Blank results are phone and screen checks for the phone test run (board #30).
+
 **Expected numbers for CY-01 to CY-05 and CY-90 to CY-95** come from the Data Lead's file [`cyclone_backup_cases.csv`](cyclone_backup_cases.csv), using its **97.8% column**. The IDs in this file match it.
 
 ---
@@ -59,8 +61,8 @@ If a case fails on your PC, first check you've pulled the latest `main`.
 
 | Device / size | Browser | Tested by | Date |
 |---|---|---|---|
-| 390×844 (iPhone 13/14) | | | |
-| 360×800 (Android) | | | |
+| iPhone | Safari | Laura Isabelle | 14 Nov 2026 |
+| Android phone | Chrome | Laura Isabelle | 14 Nov 2026 |
 | Real phone: ________ | | | |
 
 ---
@@ -69,9 +71,9 @@ If a case fails on your PC, first check you've pulled the latest `main`.
 
 | ID | Steps | Expected | Result | Notes |
 |---|---|---|---|---|
-| CY-A1 | `GET /api/cyclone/appliances` | 7 appliances with the ids in the table above; every one has `watts` and a `source` | | |
-| CY-A2 | Open the Cyclone tab | Every appliance shows its name and watts, with a way to see the source | | |
-| CY-A3 | Check the watts | Match the sourced table above (the API now reads them from `cyclone_appliances.csv`) | | |
+| CY-A1 | `GET /api/cyclone/appliances` | 7 appliances with the ids in the table above; every one has `watts` and a `source` | P (API) | |
+| CY-A2 | Open the Cyclone tab | Every appliance shows its name and watts, with a way to see the source | P (phone) | |
+| CY-A3 | Check the watts | Match the sourced table above (the API now reads them from `cyclone_appliances.csv`) | P (API) | |
 
 ## 2. Battery hours (most important)
 
@@ -79,25 +81,25 @@ Battery 5 kWh, 97.8% usable. Hours per day as listed.
 
 | ID | Appliances (hours a day) | Expected kWh a day (API shows 2 decimals) | Expected hours covered | Result | Notes |
 |---|---|---|---|---|---|
-| CY-01 | Fridge 24 h | 0.8521 → **0.85** | **137.7** | | |
-| CY-02 | Fridge 24 h, Wi-Fi 24 h | 1.1401 → **1.14** | **102.9** | | |
-| **CY-03** | **Fridge 24 h, Wi-Fi 24 h, LED light 6 h** (the demo case) | **1.1941 → 1.19** | **98.3 → "up to about 4 days"** | | Must match the demo and slides |
-| CY-04 | Fridge 24 h, Wi-Fi 24 h, LED 6 h, ceiling fan 8 h | 2.5941 → **2.59** | **45.2** | | Shows how a fan cuts the time in half |
-| CY-05 | Fridge 24 h, TV 4 h, laptop 4 h, phone charger 2 h | 1.6021 → **1.60** | **73.3** | | |
-| CY-06 | Untick an appliance after a result | — | Hours update straight away | | |
-| CY-07 | Leave `batteryKwh` out of the request | — | Uses the default **5 kWh** | | |
+| CY-01 | Fridge 24 h | 0.8521 → **0.85** | **137.7** | P (API) | |
+| CY-02 | Fridge 24 h, Wi-Fi 24 h | 1.1401 → **1.14** | **102.9** | P (API) | |
+| **CY-03** | **Fridge 24 h, Wi-Fi 24 h, LED light 6 h** (the demo case) | **1.1941 → 1.19** | **98.3 → "up to about 4 days"** | P (API) | Must match the demo and slides |
+| CY-04 | Fridge 24 h, Wi-Fi 24 h, LED 6 h, ceiling fan 8 h | 2.5941 → **2.59** | **45.2** | P (API + phone) | Shows how a fan cuts the time in half |
+| CY-05 | Fridge 24 h, TV 4 h, laptop 4 h, phone charger 2 h | 1.6021 → **1.60** | **73.3** | P (API) | |
+| CY-06 | Untick an appliance after a result | — | Hours update straight away | P (phone) | |
+| CY-07 | Leave `batteryKwh` out of the request | — | Uses the default **5 kWh** | P (API) | |
 
 ## 3. Bad input (400)
 
 | ID | Request | Expected | Result | Notes |
 |---|---|---|---|---|
-| CY-90 | Empty appliance list | 400 "Choose at least one appliance." | | |
-| CY-91 | Same appliance twice (fridge 24 h, fridge 10 h) | 400 "Each appliance can only be listed once: fridge." | | The app's tick boxes should prevent this |
-| CY-92 | Fridge 25 h | 400 "hoursPerDay must be between 0 and 24." | | |
-| CY-93 | Fridge 0 h, Wi-Fi 0 h | 400 "At least one appliance needs more than 0 hours a day." | | |
-| CY-94 | Battery 0 kWh | 400 "batteryKwh must be more than 0 and at most 50." | | |
-| CY-95 | Battery 51 kWh | 400 "batteryKwh must be more than 0 and at most 50." | | |
-| CY-96 | Unknown appliance id (`"oven"`) | 400 "Unknown appliance id: oven. Use GET /api/cyclone/appliances for the list." | | |
+| CY-90 | Empty appliance list | 400 "Choose at least one appliance." | P (API) | |
+| CY-91 | Same appliance twice (fridge 24 h, fridge 10 h) | 400 "Each appliance can only be listed once: fridge." | P (API + phone) | The app's tick boxes should prevent this |
+| CY-92 | Fridge 25 h | 400 "hoursPerDay must be between 0 and 24." | P (API) | |
+| CY-93 | Fridge 0 h, Wi-Fi 0 h | 400 "At least one appliance needs more than 0 hours a day." | P (API) | |
+| CY-94 | Battery 0 kWh | 400 "batteryKwh must be more than 0 and at most 50." | P (API) | |
+| CY-95 | Battery 51 kWh | 400 "batteryKwh must be more than 0 and at most 50." | P (API) | |
+| CY-96 | Unknown appliance id (`"oven"`) | 400 "Unknown appliance id: oven. Use GET /api/cyclone/appliances for the list." | P (API) | |
 
 ## 4. Wind outlook (built; works offline from a saved forecast)
 
@@ -109,15 +111,15 @@ Battery 5 kWh, 97.8% usable. Hours per day as listed.
 
 | ID | Check | Expected | Result | Notes |
 |---|---|---|---|---|
-| CY-30 | Calm forecast (the saved forecast is one) | `level: "ok"`; "No strong winds in the next 48 hours (strongest wind about 16 km/h, gusts 21 km/h). Keep your battery charged during cyclone season."; calm colours, no alarm | | Expected offline result today |
-| CY-31 | Strong winds (62.97–88.89 km/h) | `level: "charge"`; "Strong winds forecast … Charge your battery." | | Only testable live on a windy day, or with a test forecast file from the developers |
-| CY-32 | Storm winds (88.90 km/h or more) | `level: "chargeNow"`; "Storm-force winds forecast … Charge your battery now." | | Same as CY-31 |
-| CY-33 | Every result | `advice` ends with "For official cyclone warnings, check MMS." and the screen shows it | | |
-| CY-34 | Times | Shown in Mauritius time (UTC+4), not UTC | | |
-| CY-35 | **No API key, or Wi-Fi / internet off**, then open the Cyclone tab | Answers within about 3 seconds with `isOffline: true`; the screen says it's the last saved forecast and shows its date (14 Nov 2026). It's a **real saved forecast**, never a made-up storm | | Key "never breaks on stage" check |
-| CY-36 | With the key set, open the tab twice within a few minutes | Second time is instant (15-minute cache); `isOffline: false` | | Only once the key is set |
-| CY-37 | Security | No OpenWeather API key in any committed file (`appsettings.json`, code, docs). Search the repo for "OpenWeather" before every merge | | Key lives only in user-secrets |
-| CY-38 | Saved forecast file missing | The API still answers without crashing, or the screen hides the outlook card with a friendly note | | Agree the expected behaviour with the Backend Lead |
+| CY-30 | Calm forecast (the saved forecast is one) | `level: "ok"`; "No strong winds in the next 48 hours (strongest wind about 16 km/h, gusts 21 km/h). Keep your battery charged during cyclone season."; calm colours, no alarm | P (API + phone) | Expected offline result today |
+| CY-31 | Strong winds (62.97–88.89 km/h) | `level: "charge"`; "Strong winds forecast … Charge your battery." | To do: needs a windy-day forecast or a test file | Only testable live on a windy day, or with a test forecast file from the developers |
+| CY-32 | Storm winds (88.90 km/h or more) | `level: "chargeNow"`; "Storm-force winds forecast … Charge your battery now." | To do: needs a storm forecast or a test file | Same as CY-31 |
+| CY-33 | Every result | `advice` ends with "For official cyclone warnings, check MMS." and the screen shows it | P (API + phone) | |
+| CY-34 | Times | Shown in Mauritius time (UTC+4), not UTC | P (phone) | |
+| CY-35 | **No API key, or Wi-Fi / internet off**, then open the Cyclone tab | Answers within about 3 seconds with `isOffline: true`; the screen says it's the last saved forecast and shows its date (14 Nov 2026). It's a **real saved forecast**, never a made-up storm | P (API + phone) | Key "never breaks on stage" check |
+| CY-36 | With the key set, open the tab twice within a few minutes | Second time is instant (15-minute cache); `isOffline: false` | To do: needs the OpenWeather API key | Only once the key is set |
+| CY-37 | Security | No OpenWeather API key in any committed file (`appsettings.json`, code, docs). Search the repo for "OpenWeather" before every merge | P (phone) | Key lives only in user-secrets |
+| CY-38 | Saved forecast file missing | The API still answers without crashing, or the screen hides the outlook card with a friendly note | To do: agree expected behaviour | Agree the expected behaviour with the Backend Lead |
 
 **Pitch note:** on stage the outlook will most likely say **"No strong winds"** (calm weather, or the offline calm forecast). That's honest; don't promise judges a "charge your battery now" message. The wireframe's "Strong winds expected Tuesday night" banner is only an example.
 
@@ -125,24 +127,24 @@ Battery 5 kWh, 97.8% usable. Hours per day as listed.
 
 | ID | Check | Expected | Result | Notes |
 |---|---|---|---|---|
-| CY-50 | Result wording | Starts with "up to about…", e.g. **"up to about 4.1 days"** for CY-03; never a bare promise like "4 days" | | |
-| CY-51 | Caveat | Shows: "Assumes a new, fully charged battery. Real time is usually shorter: inverters lose more at small loads, and older batteries hold less." | | |
-| CY-52 | Assumptions list | Also keeps today's lines "Without a battery, ordinary rooftop solar switches off when the CEB grid goes down." and "For official cyclone warnings, check the Mauritius Meteorological Services (MMS)." Lists the appliance sources, "Usable battery: 97.8% of 5 kWh (Huawei SUN2000-5KTL-L1)", "Battery full when the power cut starts. Solar recharging after the storm is not counted.", **and the caveat** "Assumes a new, fully charged battery. Real time is usually shorter: inverters lose more at small loads, and older batteries hold less." | | The caveat must be in the list itself, not only elsewhere on screen |
-| CY-53 | No battery | Choosing "No battery" (if offered) shows: solar panels switch off when the CEB power goes off; no hours shown | | |
-| CY-54 | Kreol | If the screen is in Kreol, the message reads naturally and the numbers match the English version (e.g. "…pandan apepre 98 erdtan") | | Ask a Kreol speaker on the team to check |
-| CY-55 | Long results | Very long times (e.g. fridge only, 137.7 hours) are shown readably, e.g. "up to about 5½ days", not "137.7 hours" only | | Agree the format with Frontend |
-| CY-56 | Money/number format | Hours to 1 decimal at most; kWh to 2 decimals | | |
-| CY-57 | Fits the phone | No sideways scrolling at 360 px; tick boxes and hour inputs easy to tap (about 44 px) | | |
-| CY-58 | Bottom nav | The Cyclone tab is highlighted on this screen | | |
-| CY-59 | Backend down | Loading state, then a friendly error; no blank screen or crash | | |
+| CY-50 | Result wording | Starts with "up to about…", e.g. **"up to about 4.1 days"** for CY-03; never a bare promise like "4 days" | P (API) | |
+| CY-51 | Caveat | Shows: "Assumes a new, fully charged battery. Real time is usually shorter: inverters lose more at small loads, and older batteries hold less." | P (API + phone) | |
+| CY-52 | Assumptions list | Also keeps today's lines "Without a battery, ordinary rooftop solar switches off when the CEB grid goes down." and "For official cyclone warnings, check the Mauritius Meteorological Services (MMS)." Lists the appliance sources, "Usable battery: 97.8% of 5 kWh (Huawei SUN2000-5KTL-L1)", "Battery full when the power cut starts. Solar recharging after the storm is not counted.", **and the caveat** "Assumes a new, fully charged battery. Real time is usually shorter: inverters lose more at small loads, and older batteries hold less." | P (API + phone) | The caveat must be in the list itself, not only elsewhere on screen |
+| CY-53 | No battery | Choosing "No battery" (if offered) shows: solar panels switch off when the CEB power goes off; no hours shown | P (phone) | |
+| CY-54 | Kreol | If the screen is in Kreol, the message reads naturally and the numbers match the English version (e.g. "…pandan apepre 98 erdtan") | P (phone) | Ask a Kreol speaker on the team to check |
+| CY-55 | Long results | Very long times (e.g. fridge only, 137.7 hours) are shown readably, e.g. "up to about 5½ days", not "137.7 hours" only | P (phone) | Agree the format with Frontend |
+| CY-56 | Money/number format | Hours to 1 decimal at most; kWh to 2 decimals | P (phone) | |
+| CY-57 | Fits the phone | No sideways scrolling at 360 px; tick boxes and hour inputs easy to tap (about 44 px) | P (phone) | |
+| CY-58 | Bottom nav | The Cyclone tab is highlighted on this screen | P (phone) | |
+| CY-59 | Backend down | Loading state, then a friendly error; no blank screen or crash | P (phone) | |
 
 ## 6. Demo path (run before every rehearsal and on stage day)
 
 | ID | Check | Expected | Result | Notes |
 |---|---|---|---|---|
-| CY-70 | Open Cyclone mode, tick fridge, Wi-Fi and LED light (6 h) | **"up to about 4.1 days"** (98.3 hours) within a few seconds | | Matches CY-03; on stage, read exactly what the screen says |
-| CY-71 | Run with the demo phone's Wi-Fi off | Battery result still works (offline); outlook shows "offline" | | |
-| CY-72 | Run 3 times in a row | Same result every time | | |
+| CY-70 | Open Cyclone mode, tick fridge, Wi-Fi and LED light (6 h) | **"up to about 4.1 days"** (98.3 hours) within a few seconds | P (phone) | Matches CY-03; on stage, read exactly what the screen says |
+| CY-71 | Run with the demo phone's Wi-Fi off | Battery result still works (offline); outlook shows "offline" | P (phone) | |
+| CY-72 | Run 3 times in a row | Same result every time | To do at rehearsal | |
 
 ---
 
@@ -168,6 +170,6 @@ Status:      Open / Fixed / Re-tested OK
 
 | | Passed | Failed | Not run |
 |---|---|---|---|
-| Totals | | | |
+| Totals | 34 | 0 | 5 |
 
-Ready for demo? ☐ Yes ☐ No. Signed: __________ Date: __________
+Ready for demo? ☒ Yes ☐ No. Signed: __________ Date: __________
