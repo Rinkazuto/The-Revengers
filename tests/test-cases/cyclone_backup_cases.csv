@@ -1,0 +1,12 @@
+case_id,appliances_and_hours,battery_kwh,expected_status,kwh_per_day,hours_covered_if_97_8_percent_usable,hours_covered_if_80_percent_usable,working
+CY-01,fridge 24 h,5,200,0.8521,137.7,112.7,35.5023 W x 24 h = 0.8521 kWh/day; hours = usable kWh / kWh per day x 24
+CY-02,fridge 24 h; wifi_router 24 h,5,200,1.1401,102.9,84.2,35.5023 W x 24 h + 12 W x 24 h = 1.1401 kWh/day; hours = usable kWh / kWh per day x 24
+CY-03,fridge 24 h; wifi_router 24 h; led_light 6 h,5,200,1.1941,98.3,80.4,35.5023 W x 24 h + 12 W x 24 h + 9 W x 6 h = 1.1941 kWh/day; hours = usable kWh / kWh per day x 24
+CY-04,fridge 24 h; wifi_router 24 h; led_light 6 h; ceiling_fan 8 h,5,200,2.5941,45.2,37.0,35.5023 W x 24 h + 12 W x 24 h + 9 W x 6 h + 175 W x 8 h = 2.5941 kWh/day; hours = usable kWh / kWh per day x 24
+CY-05,fridge 24 h; tv 4 h; laptop 4 h; phone_charger 2 h,5,200,1.6021,73.3,59.9,35.5023 W x 24 h + 120 W x 4 h + 50 W x 4 h + 35 W x 2 h = 1.6021 kWh/day; hours = usable kWh / kWh per day x 24
+CY-90,(empty list),5,400,,,,empty appliance list
+CY-91,fridge 24 h; fridge 10 h,5,400,,,,duplicate appliance id
+CY-92,fridge 25 h,5,400,,,,hours not 0 to 24
+CY-93,fridge 0 h; wifi_router 0 h,5,400,,,,total hours = 0
+CY-94,fridge 24 h,0,400,,,,batteryKwh must be > 0
+CY-95,fridge 24 h,51,400,,,,batteryKwh must be <= 50
