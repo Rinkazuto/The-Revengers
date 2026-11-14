@@ -54,7 +54,7 @@ else
                 <MudPaper Class="pa-3" Elevation="1" Style="height: 100%; border: 2px solid var(--mud-palette-primary);">
                     <MudText Typo="Typo.caption">With solar</MudText>
                     <MudText Typo="Typo.h6" Color="Color.Primary">Rs @Rs(_result.WithSolar.MonthlyBillRs)</MudText>
-                    <MudText Typo="Typo.caption">per month</MudText>
+                    <MudText Typo="Typo.caption">per month · tariff 150A</MudText>
                 </MudPaper>
             </MudItem>
         </MudGrid>
@@ -76,9 +76,21 @@ else
                 <MudText Typo="Typo.h6">Solar doesn't pay back at this usage.</MudText>
             }
 
-            <MudText Typo="Typo.caption" Class="d-block mt-2">
-                Install cost after the 25% government grant: Rs @Rs(_result.InstallCostRs) (CEB estimate)
+                        <MudDivider Class="my-3" />
+
+            <div class="d-flex justify-space-between">
+                <MudText Typo="Typo.body2">Export credit (separate)</MudText>
+                <MudText Typo="Typo.body2"><b>Rs @Rs(_result.WithSolar.ExportCreditRs) / month</b></MudText>
+            </div>
+            <MudText Typo="Typo.caption" Class="d-block mb-2">
+                Credit from CEB for extra solar you send to the grid. Not taken off your bill or counted in your savings.
             </MudText>
+
+            <div class="d-flex justify-space-between">
+                <MudText Typo="Typo.body2">Cost after the 25% grant, incl. Rs 2,000 fee</MudText>
+                <MudText Typo="Typo.body2"><b>Rs @Rs(_result.InstallCostRs)</b></MudText>
+            </div>
+            <MudText Typo="Typo.caption">CEB estimate</MudText>
         </MudPaper>
 
         @* ---------- Panel size ---------- *@

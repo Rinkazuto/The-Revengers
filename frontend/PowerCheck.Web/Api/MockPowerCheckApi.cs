@@ -58,7 +58,7 @@ public class MockPowerCheckApi : IPowerCheckApi
         return new SolarResponse(
             request.MonthlyKwh, size,
             new WithoutSolarDto(withoutSolar),
-            new WithSolarDto(generation, fromGrid, withSolar),
+                        new WithSolarDto(generation, fromGrid, withSolar, Math.Max(0, generation - request.MonthlyKwh) * 3.00m),
             monthlySavings, yearlySavings, installCost, payback,
             "FAKE data",
             ["FAKE: 110 kWh per kWp per month", "FAKE: install cost Rs 250,000"],
