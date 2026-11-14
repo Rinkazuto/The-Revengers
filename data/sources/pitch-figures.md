@@ -96,13 +96,15 @@ On screen and on slides, say "up to". The team's wording: "Assumes a new, fully 
 
 | Figure | Value |
 |---|---|
-| Official sources used | 11: CEB tariffs page, CEB 2023 tariff PDF, General Notice 1804 of 2022, General Notice 473 of 2026, Cabinet decisions of 10 April 2026, Statistics Mauritius 2025, CEB solar leaflet, CEB solar price guide, PVGIS, NASA POWER, VAT Act |
+| Official sources the calculations use | 10: CEB tariffs page, CEB 2023 tariff PDF, General Notice 1804 of 2022, General Notice 473 of 2026, Cabinet decisions of 10 April 2026, Statistics Mauritius 2025, CEB solar leaflet, CEB solar price guide, CEB SSDG Grid Code, PVGIS, VAT Act |
+| Other named, checkable sources (cyclone mode) | Courts Mammouth (fridge label), Virginia Tech BSE-301NP, TP-Link Archer C6 spec, US FTC "Shopping for Light Bulbs", Huawei LUNA2000 and SUN2000 specs, Met Office Beaufort scale, label photo of a team member's Apple 35W charger (Model A2676) |
+| NASA POWER | Kept in `data/` as a cross-check of PVGIS only. Not used in any calculation |
 | Rows of real data in the database | 60 tariff bands, 7 minimum charges, 2 meter rents, 15 solar scheme values, 12 system prices, 12 PVGIS months, 2 prosumer tariffs with 10 bands and 4 minimum charges |
 | Expected results used to test the app | 40 bills, 7 solar cases, 11 cyclone cases, each worked out separately from the app's code |
 
 ## Ready answers for judges
 
-- **"Is this real data?"** Yes. Every number comes from CEB, the Government Gazette, Statistics Mauritius or PVGIS. Each file's source and checks are in `data/sources/README.md`.
+- **"Is this real data?"** Yes. Every number comes from a named, checkable source: the bill and solar figures from CEB, the Government Gazette, Statistics Mauritius and PVGIS; the cyclone figures from appliance labels and maker specifications. Each file's source and checks are in `data/sources/README.md`.
 - **"How do you know the bills are right?"** 40 expected bills, each with its working written out, all match the app's calculation. 200 kWh gives Rs 1,216.75.
 - **"What happens when CEB changes the tariff again?"** Add the new rates to `tariff_tiers.csv` with the new start date. The app picks the newest rates automatically, and no code changes.
 - **"Why 113.71 kWh?"** PVGIS, the European Commission's solar model, using 2005 to 2023 satellite data for Mauritius with standard panel losses.
