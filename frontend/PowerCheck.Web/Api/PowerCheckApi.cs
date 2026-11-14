@@ -33,7 +33,7 @@ public class PowerCheckApi(HttpClient http) : IPowerCheckApi
         }
         catch (HttpRequestException)
         {
-            throw new ApiException("Can't reach the Power Check server. Check your connection and try again.");
+            throw new ApiException("Can't reach the ReVolt server. Check your connection and try again.");
         }
         catch (TaskCanceledException)
         {
