@@ -23,7 +23,10 @@ public static class CycloneData
     {
         lock (Lock)
         {
-            return _cache ??= Load(Path.Combine(env.ContentRootPath, "..", "..", "data", "seed"));
+            // Next to the app when published (e.g. on Azure), else the repo's data/seed when run locally
+            var published = Path.Combine(env.ContentRootPath, "data", "seed");
+            var folder = Directory.Exists(published) ? published : Path.Combine(env.ContentRootPath, "..", "..", "data", "seed");
+            return _cache ??= Load(folder);
         }
     }
 
