@@ -226,7 +226,7 @@ Sections 6 and 7 work **offline**. Section 8 calls OpenWeather but always answer
 
 Common home appliances with their power. Today the list is in `Services/CycloneData.cs`; it moves to `data/seed/` once every value is sourced by the Data Lead.
 
-> 🔄 **Two placeholder values until sourced**, both marked "pending source" in the code and shown on screen: **fridge 50 W average (1.2 kWh/day)** and **usable battery 80%**. When the real values arrive only these two numbers change: same endpoints, same fields.
+> **Sourced values** (Data Lead, `data/seed/cyclone_*.csv`): fridge **35.5 W** average (Samsung RB29FERNDSA energy label, 311 kWh/year, sold by Courts Mammouth); usable battery **97.8%** of 5 kWh (Huawei SUN2000-5KTL-L1 weighted efficiency, decision log row 13). The result is shown as **"up to"** with the caveat: "Assumes a new, fully charged battery. Real time is usually shorter: inverters lose more at small loads, and older batteries hold less."
 
 **Response 200**
 ```json
@@ -365,7 +365,7 @@ public record OutlookResponse(string Level, decimal MaxWindKmh, decimal MaxGustK
 | 13 | With solar the home is billed on **prosumer tariff 150A/150B** (GN 473/2026): flat Rs 8.58 up to 300 kWh total use, bands above, minimum charge by total use; CST only above 500 kWh, labelled pending URA approval | Solar response | ✅ Merged (#73 data, #103 bill). Checked: 200 kWh + 3 kWp = Rs 211.60, saving Rs 1,005.15 |
 | 14 | New `exportCreditRs` in `withSolar`, shown separately, **not** counted in savings | Solar response | ✅ Merged (#103) |
 | 15 | New optional `phase` (`"single"` → 150A default, `"three"` → 150B); `tariffCode` only affects the without-solar bill | Solar request | ✅ Merged (#103) |
-| 16 | 🆕 Cyclone mode: `GET /api/cyclone/appliances`, `POST /api/cyclone/backup` | Sections 6–7 | ✅ Merged (#77), with 2 placeholders (fridge 50 W, usable battery 80%) until the Data Lead's sources arrive |
+| 16 | 🆕 Cyclone mode: `GET /api/cyclone/appliances`, `POST /api/cyclone/backup` | Sections 6–7 | ✅ Merged (#77). Placeholders replaced by sourced values: fridge 35.5 W (#83), battery 97.8% (decision log row 13, backend to set) |
 | 17 | 🆕 `GET /api/cyclone/outlook`: OpenWeather wind → battery advice (`ok` / `charge` / `chargeNow`, Beaufort on sustained wind), offline fallback | Section 8 | 🔄 Agreed, only if done before the freeze |
 
 ## Known gaps (to fix before the demo)

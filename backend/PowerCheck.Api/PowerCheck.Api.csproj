@@ -16,4 +16,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="11.0.1" />
   </ItemGroup>
 
+  <!-- When publishing (e.g. to Azure), copy the repo's data/seed CSVs next to the app as data/seed,
+       so the database is filled on the server too. Local runs still read ../../data/seed. -->
+  <ItemGroup>
+    <None Include="..\..\data\seed\**\*.csv" Link="data\seed\%(RecursiveDir)%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" CopyToOutputDirectory="Never" />
+  </ItemGroup>
+
 </Project>
