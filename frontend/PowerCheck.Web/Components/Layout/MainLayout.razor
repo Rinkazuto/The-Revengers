@@ -6,15 +6,15 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="1" Dense="true">
-        <MudText Typo="Typo.h6">ReVolt</MudText>
-    </MudAppBar>
-
     <MudMainContent Class="page-content">
+        @* Small brand name at the top right (new wireframes: no top bar) *@
+        <div class="brand-header">ReVolt</div>
+
         @Body
     </MudMainContent>
 
-    <MudAppBar Bottom="true" Fixed="true" Elevation="8" Color="Color.Surface" Class="bottom-bar">
+    @* Bottom bar: 4 main pages, where thumbs reach (Section 6) *@
+    <nav class="bottom-bar">
         <NavLink href="" Match="NavLinkMatch.All" class="bottom-tab">
             <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" />
             <span>Bill</span>
@@ -23,21 +23,28 @@
             <MudIcon Icon="@Icons.Material.Filled.WbSunny" />
             <span>Solar</span>
         </NavLink>
+        <NavLink href="cyclone" class="bottom-tab">
+            <MudIcon Icon="@Icons.Material.Filled.Cyclone" />
+            <span>Cyclone</span>
+        </NavLink>
         <NavLink href="readings" class="bottom-tab">
             <MudIcon Icon="@Icons.Material.Filled.ShowChart" />
             <span>Readings</span>
         </NavLink>
-    </MudAppBar>
+    </nav>
 </MudLayout>
 
 @code {
-    // ReVolt colours (decision log #7: green logo). Replace with the designer's exact green.
+    // ReVolt colours from the new wireframes.
+    // Placeholders picked from the images: replace with the designer's exact hex codes (only here).
     private readonly MudTheme _theme = new()
     {
         PaletteLight = new PaletteLight
         {
-            Primary = "#2E7D32",
-            AppbarBackground = "#2E7D32",
+            Primary = "#2E9E4F",                 // green: main buttons, active tab, chart bars
+            Secondary = "#F5C518",               // yellow: "See solar savings", "Get started", highlights
+            SecondaryContrastText = "#0F3D24",   // dark text on the yellow buttons
+            Tertiary = "#0F3D24",                // dark green: big result cards, Welcome screen
         }
     };
 }
