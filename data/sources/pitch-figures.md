@@ -54,13 +54,14 @@ The 200 kWh example in section 2 is close to the average Mauritian home.
 |---|---|---|
 | Solar output in Mauritius | 113.71 kWh per kWp per month; 1,364.48 kWh per kWp per year | PVGIS 5.3, European Commission Joint Research Centre |
 | Best and worst months | December 137.08 kWh per kWp; June 88.09 kWh per kWp | PVGIS 5.3, monthly values |
-| Size for a 200 kWh home | About 1.76 kWp (200 ÷ 113.71) | Calculated |
+| Size for a 200 kWh home | About 1.76 kWp (200 ÷ 113.71). The app picks the smallest CEB size that covers it: 2.0 kWp (2 × 113.71 = 227.42 kWh a month) | Calculated; CEB price guide sizes |
 | Government grant | 25% of the cost, up to Rs 75,000 per application | CEB Household Rooftop Solar PV Scheme leaflet, July 2026, pages 1 and 2 |
 | Gross metering | Every kWh produced credited at Rs 4.83 | CEB leaflet, page 3 |
 | Net metering | Excess kWh credited at Rs 3.00 | CEB leaflet, page 4 |
 | Contract length | 20 years | CEB leaflet, page 8 |
 | Processing fee | Rs 2,000, non-refundable | CEB leaflet, page 5 |
 | Battery | Required above 3.5 kWac | CEB leaflet, pages 1 and 5 |
+| Price of a 2 kWp system with a 5 kWh battery (demo size) | Rs 190,000 to Rs 220,000 (CEB estimate, before the grant) | CEB solar price guide, ceb.mu/pv_calculator |
 | Price of a 3 kWp system with a 5 kWh battery | Rs 240,000 to Rs 270,000 (CEB estimate, before the grant) | CEB solar price guide, ceb.mu/pv_calculator |
 | Grant on a Rs 240,000 system | Rs 60,000 (25%) | Calculated |
 | Price range of all sizes | Rs 165,000 (1.5 kWp) to Rs 850,000 (15 kWp) | CEB solar price guide |
@@ -72,10 +73,11 @@ A home with solar moves to prosumer tariff 150A (single-phase) or 150B (three-ph
 | Figure | Value | Source |
 |---|---|---|
 | Solar bill can't go below | Rs 211.60 a month (150A minimum for 76 to 300 kWh of total use) | General Notice 473 of 2026, Appendix VIII, page 2230 |
-| 200 kWh home, 3 kWp | Rs 1,216.75 → Rs 211.60 a month; saving Rs 1,005.15 | Calculated (SC-10) |
-| Export credit, 200 kWh home, 3 kWp | Rs 423.37 a month, shown separately, not counted in the saving | CEB leaflet, page 4 (Rs 3.00 per excess kWh) |
-| Install cost, 3 kWp | Rs 193,250 (Rs 255,000 middle of CEB range − Rs 63,750 grant + Rs 2,000 fee) | CEB price guide and leaflet |
-| Payback, 200 kWh home, 3 kWp | 16.0 years (panels lose 0.5% a year) | Calculated (SC-10) |
+| 200 kWh home, 2 kWp (demo, app default) | Rs 1,216.75 → Rs 211.60 a month; saving Rs 1,005.15 | Calculated (SC-18) |
+| Export credit, 200 kWh home, 2 kWp | Rs 93.92 a month, shown separately, not counted in the saving | CEB leaflet, page 4 (Rs 3.00 per excess kWh) |
+| Install cost, 2 kWp | Rs 155,750 (Rs 205,000 middle of CEB range − Rs 51,250 grant + Rs 2,000 fee) | CEB price guide and leaflet |
+| Payback, 200 kWh home, 2 kWp | 13.0 years, inside the 20-year CEB contract (panels lose 0.5% a year) | Calculated (SC-18) |
+| For comparison, 3 kWp | Same bill and saving; install Rs 193,250, payback 16.0 years, credit Rs 423.37. The extra 113.71 kWh a month it makes over 2 kWp only earns Rs 3.00 per kWh | Calculated (SC-10) |
 | The 300 kWh trap, 1.5 kWp | 300 kWh → Rs 1,110.58; 301 kWh → Rs 1,569.18. One extra kWh adds Rs 458.60, because the flat Rs 8.58 rate stops at 300 kWh of total use | Calculated (SC-14, SC-15) |
 
 ## 5c. Cyclone mode (surprise card)
