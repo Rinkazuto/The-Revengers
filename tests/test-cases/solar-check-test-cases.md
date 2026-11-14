@@ -5,6 +5,8 @@
 **Owner:** Design, QA and Pitch lead
 **Status:** Ready to run. The Solar check uses real data and tariff 150A (merged into `main`, 14 Nov 2026; checked against `SolarEndpoints.cs`). The Data Lead confirmed SC-10 to SC-16 match the live API. ⚠️ The website still has `"UseMockApi": true`, so test through Swagger until the Frontend Lead sets it to `false`.
 
+**API test run (14 Nov 2026, `main` at 94c3497, fresh database):** every case checkable through the API **passed** (109 checks across the four files, plus the restart test RD-31). In the Result column, **P (API)** = passed through the API; **API ✓, check on phone** = the numbers passed, and the screen still needs checking. Blank results are phone and screen checks for the phone test run (board #30).
+
 **Expected numbers for SC-10 to SC-18** come from the Data Lead's file [`solar_expected_results.csv`](solar_expected_results.csv), which shows the working for each case. The IDs in this file match it.
 
 ---
@@ -37,8 +39,8 @@
 
 | Device / size | Browser | Tested by | Date |
 |---|---|---|---|
-| 390×844 (iPhone 13/14) | | | |
-| 360×800 (Android) | | | |
+| iPhone | Safari | Laura Isabelle | 14 Nov 2026 |
+| Android phone | Chrome | Laura Isabelle | 14 Nov 2026 |
 | Real phone: ________ | | | |
 
 ---
@@ -47,15 +49,15 @@
 
 | ID | Steps | Input | Expected | Result | Notes |
 |---|---|---|---|---|---|
-| SC-01 | Bill tab → enter kWh → Calculate → See solar savings | 200 kWh | Solar check screen opens and shows Today, With solar, savings per month and payback years | | |
-| SC-02 | Open the Solar tab directly from the bottom nav | — | Screen asks for kWh, or uses the last kWh entered (agree which with the developers) | | |
-| SC-03 | Compare "Today" with the Bill calculator result | 200 kWh | "Today" equals the Bill calculator total for the same kWh | | |
-| SC-04 | Check the savings arithmetic | 200 kWh | Savings per month = Today − With solar (export credit **not** included) | | |
-| SC-05 | Open and use the size dropdown | 200 kWh, try 3 then 5 kWp | Shows exactly the 12 CEB sizes, no free typing; all figures update and the chosen size is shown | | |
-| SC-06 | Don't choose a size (dropdown left on "Recommended for my usage") | 200 kWh | The app picks **2 kWp** and says "2 kWp makes about 227 kWh a month on average" | | Checked in the running app on 14 Nov 2026 |
-| SC-07 | Export credit | 200 kWh, 3 kWp | Shown on its own line, e.g. "+ Rs 423.37 credit from CEB", and not added to the savings | | |
-| SC-08 | Assumptions list and graph | 200 kWh, 3 kWp | The **assumptions** list is visible under the result; the 20-year projection graph shows | | |
-| SC-09 | Go back to the Bill tab, change the kWh, return to Solar | 200 → 300 kWh | Solar check uses the new kWh | | |
+| SC-01 | Bill tab → enter kWh → Calculate → See solar savings | 200 kWh | Solar check screen opens and shows Today, With solar, savings per month and payback years | P (phone) | |
+| SC-02 | Open the Solar tab directly from the bottom nav | — | Screen asks for kWh, or uses the last kWh entered (agree which with the developers) | P (phone) | |
+| SC-03 | Compare "Today" with the Bill calculator result | 200 kWh | "Today" equals the Bill calculator total for the same kWh | P (API) | |
+| SC-04 | Check the savings arithmetic | 200 kWh | Savings per month = Today − With solar (export credit **not** included) | P (API) | |
+| SC-05 | Open and use the size dropdown | 200 kWh, try 3 then 5 kWp | Shows exactly the 12 CEB sizes, no free typing; all figures update and the chosen size is shown | P (phone) | |
+| SC-06 | Don't choose a size (dropdown left on "Recommended for my usage") | 200 kWh | The app picks **2 kWp** and says "2 kWp makes about 227 kWh a month on average" | P (phone) | Checked in the running app on 14 Nov 2026 |
+| SC-07 | Export credit | 200 kWh, 3 kWp | Shown on its own line, e.g. "+ Rs 423.37 credit from CEB", and not added to the savings | P (phone) | |
+| SC-08 | Assumptions list and graph | 200 kWh, 3 kWp | The **assumptions** list is visible under the result; the 20-year projection graph shows | P (API + phone) | |
+| SC-09 | Go back to the Bill tab, change the kWh, return to Solar | 200 → 300 kWh | Solar check uses the new kWh | P (phone) | |
 
 ## 2. Correct numbers (most important)
 
@@ -63,15 +65,15 @@ Values are an average month (12 PVGIS months, panels −0.5% a year), single pha
 
 | ID | kWh | Size | Today | With solar | Export credit (separate) | Savings / month | Install cost | Payback | Result | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
-| SC-10 | **200** (pitch example) | 3 kWp | **Rs 1,216.75** | **Rs 211.60** | Rs 423.37 | **Rs 1,005.15** | Rs 193,250 | **16.0 years** | | Flat Rs 8.58 rule; bill sits at the 150A minimum. Only when 3 kWp is chosen; the demo uses the default 2 kWp (SC-18) |
-| SC-11 | 201.5 (average home) | 3 kWp | Rs 1,228.86 | Rs 211.60 | Rs 418.87 | Rs 1,017.26 | Rs 193,250 | 15.8 years | | |
-| SC-12 | 50 (low use) | 3 kWp | Rs 216.75 | Rs 50.60 | Rs 873.37 | Rs 166.15 | Rs 193,250 | **none within 30 years** | | The screen must say solar doesn't pay back at this usage (see SC-31) |
-| SC-13 | 350 | 3 kWp | Rs 2,676.25 | Rs 553.51 | Rs 48.38 | Rs 2,122.74 | Rs 193,250 | 7.7 years | | Over 300 kWh: 150A bands, minimum Rs 424.35 |
-| SC-14 | 300 (band edge) | 1.5 kWp | Rs 2,074.75 | Rs 1,110.58 | Rs 0.00 | Rs 964.17 | Rs 137,000 | 12.4 years | | Last kWh on the flat Rs 8.58 rule |
-| SC-15 | 301 (one above) | 1.5 kWp | Rs 2,086.78 | Rs 1,569.18 | Rs 0.00 | Rs 517.60 | Rs 137,000 | **none within 30 years** | | Crossing 300 kWh total moves the bill to the 150A bands; savings drop sharply |
-| SC-16 | 500 | 3 kWp | Rs 4,480.75 | Rs 1,911.30 | Rs 0.00 | Rs 2,569.45 | Rs 193,250 | 6.4 years | | |
-| SC-17 | 650, no size chosen | **6 kWp** (picked by the app) | Rs 6,322.75 | **Rs 850.49** | Rs 181.70 | **Rs 5,472.26** | Rs 377,000 | **5.8 years** | | Checked in the live API and by hand by the Data Lead (replaces the pre-150A values Rs 505.94 / 5.4 years). Over 500 kWh, so the CST of Rs 0.82 per kWh covered by solar applies (leaflet, pending URA approval) |
-| SC-18 | **200, no size chosen** | **2 kWp** (picked by the app) | Rs 1,216.75 | **Rs 211.60** | Rs 93.92 | **Rs 1,005.15** | Rs 155,750 | **13.0 years** | | Same bill and saving as SC-10 (3 kWp) because the 150A minimum sets the bill; only install, payback and credit differ |
+| SC-10 | **200** (pitch example) | 3 kWp | **Rs 1,216.75** | **Rs 211.60** | Rs 423.37 | **Rs 1,005.15** | Rs 193,250 | **16.0 years** | P (API) | Flat Rs 8.58 rule; bill sits at the 150A minimum. Only when 3 kWp is chosen; the demo uses the default 2 kWp (SC-18) |
+| SC-11 | 201.5 (average home) | 3 kWp | Rs 1,228.86 | Rs 211.60 | Rs 418.87 | Rs 1,017.26 | Rs 193,250 | 15.8 years | P (API) | |
+| SC-12 | 50 (low use) | 3 kWp | Rs 216.75 | Rs 50.60 | Rs 873.37 | Rs 166.15 | Rs 193,250 | **none within 30 years** | P (API + phone) | The screen must say solar doesn't pay back at this usage (see SC-31) |
+| SC-13 | 350 | 3 kWp | Rs 2,676.25 | Rs 553.51 | Rs 48.38 | Rs 2,122.74 | Rs 193,250 | 7.7 years | P (API) | Over 300 kWh: 150A bands, minimum Rs 424.35 |
+| SC-14 | 300 (band edge) | 1.5 kWp | Rs 2,074.75 | Rs 1,110.58 | Rs 0.00 | Rs 964.17 | Rs 137,000 | 12.4 years | P (API) | Last kWh on the flat Rs 8.58 rule |
+| SC-15 | 301 (one above) | 1.5 kWp | Rs 2,086.78 | Rs 1,569.18 | Rs 0.00 | Rs 517.60 | Rs 137,000 | **none within 30 years** | P (API) | Crossing 300 kWh total moves the bill to the 150A bands; savings drop sharply |
+| SC-16 | 500 | 3 kWp | Rs 4,480.75 | Rs 1,911.30 | Rs 0.00 | Rs 2,569.45 | Rs 193,250 | 6.4 years | P (API) | |
+| SC-17 | 650, no size chosen | **6 kWp** (picked by the app) | Rs 6,322.75 | **Rs 850.49** | Rs 181.70 | **Rs 5,472.26** | Rs 377,000 | **5.8 years** | P (API + phone) | Checked in the live API and by hand by the Data Lead (replaces the pre-150A values Rs 505.94 / 5.4 years). Over 500 kWh, so the CST of Rs 0.82 per kWh covered by solar applies (leaflet, pending URA approval) |
+| SC-18 | **200, no size chosen** | **2 kWp** (picked by the app) | Rs 1,216.75 | **Rs 211.60** | Rs 93.92 | **Rs 1,005.15** | Rs 155,750 | **13.0 years** | P (API + phone) | Same bill and saving as SC-10 (3 kWp) because the 150A minimum sets the bill; only install, payback and credit differ |
 
 **Note for the pitch:** SC-14 and SC-15 show a real cliff. At 300 kWh solar pays back in 12.4 years; at 301 kWh it doesn't pay back within 30 years on 1.5 kWp. Worth knowing if a judge asks about a home around 300 kWh.
 
@@ -81,65 +83,65 @@ Formula: midpoint of CEB's price range − grant (25%, max Rs 75,000) + Rs 2,000
 
 | ID | Size | CEB price range | Midpoint | Grant | Expected `installCostRs` | Checks | Result |
 |---|---|---|---|---|---|---|---|
-| SC-20 | 6 kWp | Rs 420,000–480,000 | Rs 450,000 | Rs 75,000 (capped) | **Rs 377,000** | Grant cap applied | |
-| SC-21 | 1.5 kWp | Rs 165,000–195,000 | Rs 180,000 | Rs 45,000 (25%) | **Rs 137,000** | 25% applied, not the cap | |
-| SC-22 | 3 kWp | Rs 240,000–270,000 | Rs 255,000 | Rs 63,750 (25%) | **Rs 193,250** | 25% applied | |
-| SC-23 | Any size | — | — | — | Payback uses `installCostRs` (after grant and fee), not the full price | | |
+| SC-20 | 6 kWp | Rs 420,000–480,000 | Rs 450,000 | Rs 75,000 (capped) | **Rs 377,000** | Grant cap applied | P (API) |
+| SC-21 | 1.5 kWp | Rs 165,000–195,000 | Rs 180,000 | Rs 45,000 (25%) | **Rs 137,000** | 25% applied, not the cap | P (API) |
+| SC-22 | 3 kWp | Rs 240,000–270,000 | Rs 255,000 | Rs 63,750 (25%) | **Rs 193,250** | 25% applied | P (API) |
+| SC-23 | Any size | — | — | — | Payback uses `installCostRs` (after grant and fee), not the full price | | P (phone) |
 
 ## 4. Edge cases
 
 | ID | Input | Expected | Result | Notes |
 |---|---|---|---|---|
-| SC-30 | 0 kWh | No crash; a clear message such as "Enter how many kWh you used" | | |
-| SC-31 | Usage where solar never pays back (SC-12, SC-15) | No negative, "infinite" or nonsense payback; a clear message such as "Solar doesn't pay back at this usage" (API returns `paybackYears: null`) | | |
-| SC-32 | Solar produces more than the household uses | With solar never shows a negative bill: it shows the 150A minimum, with any export credit on a separate line. (CEB's own calculator showed Rs −388.40 for 200 kWh on 3 kWp because it ignores the minimum) | | |
-| SC-33 | Very high usage (2000 kWh) | Picks a sensible size (up to 15 kWp); numbers correct; layout doesn't break | | |
-| SC-34 | Decimal input (150.5) | Either accepted and calculated correctly, or a clear message. No crash | | |
-| SC-35 | API only: `systemSizeKwp` not a CEB size (e.g. 2.2) | 400 "systemSizeKwp must be one of the CEB sizes: …" listing the 12 sizes. The app's dropdown should make this impossible | | |
-| SC-35b | API only: `phase: "both"` | 400 'phase must be "single" (tariff 150A) or "three" (tariff 150B).' | | |
-| SC-35c | API only: `tariffCode: "999"` | 400 "Unknown tariffCode '999'. Known codes: …" | | |
-| SC-36 | 60 kWh, any size | With solar = **Rs 50.60** (minimum for 0–75 kWh) | | |
-| SC-37 | 200 kWh, 3 kWp | With solar = **Rs 211.60** (minimum for 76–300 kWh) | | Same as SC-10 |
-| SC-38 | 400 kWh, a size that covers all usage (e.g. 5 kWp or more) | With solar not below **Rs 424.35** (minimum for over 300 kWh) | | |
-| SC-39 | 75 kWh then 76 kWh, large system | Minimum jumps from Rs 50.60 to Rs 211.60 (band edge on total use) | | |
-| SC-39b | `phase: "three"` | Uses tariff **150B**; the screen or assumptions say so | | |
+| SC-30 | 0 kWh | No crash; a clear message such as "Enter how many kWh you used" | P (phone) | |
+| SC-31 | Usage where solar never pays back (SC-12, SC-15) | No negative, "infinite" or nonsense payback; a clear message such as "Solar doesn't pay back at this usage" (API returns `paybackYears: null`) | P (API + phone) | |
+| SC-32 | Solar produces more than the household uses | With solar never shows a negative bill: it shows the 150A minimum, with any export credit on a separate line. (CEB's own calculator showed Rs −388.40 for 200 kWh on 3 kWp because it ignores the minimum) | P (phone) | |
+| SC-33 | Very high usage (2000 kWh) | Picks a sensible size (up to 15 kWp); numbers correct; layout doesn't break | P (API) | |
+| SC-34 | Decimal input (150.5) | Either accepted and calculated correctly, or a clear message. No crash | P (phone) | |
+| SC-35 | API only: `systemSizeKwp` not a CEB size (e.g. 2.2) | 400 "systemSizeKwp must be one of the CEB sizes: …" listing the 12 sizes. The app's dropdown should make this impossible | P (API + phone) | |
+| SC-35b | API only: `phase: "both"` | 400 'phase must be "single" (tariff 150A) or "three" (tariff 150B).' | P (API) | |
+| SC-35c | API only: `tariffCode: "999"` | 400 "Unknown tariffCode '999'. Known codes: …" | P (API) | |
+| SC-36 | 60 kWh, any size | With solar = **Rs 50.60** (minimum for 0–75 kWh) | P (API) | |
+| SC-37 | 200 kWh, 3 kWp | With solar = **Rs 211.60** (minimum for 76–300 kWh) | P (API) | Same as SC-10 |
+| SC-38 | 400 kWh, a size that covers all usage (e.g. 5 kWp or more) | With solar not below **Rs 424.35** (minimum for over 300 kWh) | P (API) | |
+| SC-39 | 75 kWh then 76 kWh, large system | Minimum jumps from Rs 50.60 to Rs 211.60 (band edge on total use) | P (API) | |
+| SC-39b | `phase: "three"` | Uses tariff **150B**; the screen or assumptions say so | P (API + phone) | |
 
 ## 5. Bad input
 
 | ID | Input | Expected | Result | Notes |
 |---|---|---|---|---|
-| SC-40 | Empty field, tap Calculate | Inline message next to the field; nothing is calculated | | |
-| SC-41 | Negative number (−50) | Inline message; nothing is calculated | | |
-| SC-42 | Letters ("abc") | Rejected, or the phone shows a number keypad so letters can't be typed | | |
-| SC-43 | Absurd value (999999999) | 400 "monthlyKwh must be between 0 and 5000."; the app shows it inline, no crash | | |
-| SC-44 | Fix the bad input after an error | The error message disappears | | |
+| SC-40 | Empty field, tap Calculate | Inline message next to the field; nothing is calculated | P (phone) | |
+| SC-41 | Negative number (−50) | Inline message; nothing is calculated | P (API + phone) | |
+| SC-42 | Letters ("abc") | Rejected, or the phone shows a number keypad so letters can't be typed | P (phone) | |
+| SC-43 | Absurd value (999999999) | 400 "monthlyKwh must be between 0 and 5000."; the app shows it inline, no crash | P (API + phone) | |
+| SC-44 | Fix the bad input after an error | The error message disappears | P (phone) | |
 
 ## 6. Display and wording
 
 | ID | Check | Expected | Result | Notes |
 |---|---|---|---|---|
-| SC-50 | Source line | "Source: CEB 2026 solar scheme" is visible and links to the official page | | |
-| SC-51 | Estimate wording | The screen says the solar figures are an **estimate** | | |
-| SC-52 | Assumptions list | Readable on a phone; plain language; mentions the grant, the Rs 2,000 fee, panel ageing, tariff 150A with its minimum charge, and "export credit shown separately, not used to pay the minimum" | | |
-| SC-52b | "With solar" label | Says it includes CEB's minimum charge (tariff 150A), so a family isn't surprised it's not Rs 0 | | |
-| SC-53 | Install cost label | Makes clear the cost is **after** the 25% grant and the Rs 2,000 fee | | |
-| SC-54 | Money format | "Rs" with thousands separators and 2 decimals (F2): Rs 1,216.75 | | |
-| SC-55 | Payback format | Readable, e.g. "16.0 years" or "about 16 years". Not "15.9999 years" | | |
-| SC-56 | Fits the phone | No sideways scrolling at 360 px wide; key result visible without scrolling | | |
-| SC-57 | Readability | Text at least about 14 px; savings card colours readable (contrast) | | |
-| SC-58 | Tap targets | Buttons and the size dropdown are easy to tap with a thumb (about 44 px tall) | | |
-| SC-59 | Bottom nav | The Solar tab is highlighted while on this screen | | |
-| SC-60 | Loading / no connection | If the API is slow or down: a loading state, then a friendly error. No blank screen or crash | | |
+| SC-50 | Source line | "Source: CEB 2026 solar scheme" is visible and links to the official page | P (phone) | |
+| SC-51 | Estimate wording | The screen says the solar figures are an **estimate** | P (phone) | |
+| SC-52 | Assumptions list | Readable on a phone; plain language; mentions the grant, the Rs 2,000 fee, panel ageing, tariff 150A with its minimum charge, and "export credit shown separately, not used to pay the minimum" | P (phone) | |
+| SC-52b | "With solar" label | Says it includes CEB's minimum charge (tariff 150A), so a family isn't surprised it's not Rs 0 | P (phone) | |
+| SC-53 | Install cost label | Makes clear the cost is **after** the 25% grant and the Rs 2,000 fee | P (phone) | |
+| SC-54 | Money format | "Rs" with thousands separators and 2 decimals (F2): Rs 1,216.75 | P (phone) | |
+| SC-55 | Payback format | Readable, e.g. "16.0 years" or "about 16 years". Not "15.9999 years" | P (phone) | |
+| SC-56 | Fits the phone | No sideways scrolling at 360 px wide; key result visible without scrolling | P (phone) | |
+| SC-57 | Readability | Text at least about 14 px; savings card colours readable (contrast) | P (phone) | |
+| SC-58 | Tap targets | Buttons and the size dropdown are easy to tap with a thumb (about 44 px tall) | P (phone) | |
+| SC-59 | Bottom nav | The Solar tab is highlighted while on this screen | P (phone) | |
+| SC-60 | Loading / no connection | If the API is slow or down: a loading state, then a friendly error. No blank screen or crash | P (phone) | |
 
 ## 7. Demo path (run before every rehearsal and on stage day)
 
 | ID | Check | Expected | Result | Notes |
 |---|---|---|---|---|
-| SC-70 | Full flow: kWh → bill → See solar savings → result | Done in under 1 minute | | |
-| SC-71 | Use the exact demo numbers: 200 kWh, size left on "Recommended" (**2 kWp**, team decision) | Rs 1,216.75 → Rs 211.60, save Rs 1,005.15 a month, **money back in 13 years**, export credit Rs 93.92, cost Rs 155,750; matches the slides and the slide 5 notes | | Same as SC-18 |
-| SC-72 | Run on the demo device and network | Works; no login or other pop-ups get in the way | | |
-| SC-73 | Run 3 times in a row | Same result every time | | |
-| SC-74 | Backup ready | Screenshots or a screen recording of the flow saved in `docs/demo/`, and one screenshot on slide 5 of the pitch deck | | |
+| SC-70 | Full flow: kWh → bill → See solar savings → result | Done in under 1 minute | P (phone) | |
+| SC-71 | Use the exact demo numbers: 200 kWh, size left on "Recommended" (**2 kWp**, team decision) | Rs 1,216.75 → Rs 211.60, save Rs 1,005.15 a month, **money back in 13 years**, export credit Rs 93.92, cost Rs 155,750; matches the slides and the slide 5 notes | P (phone) | Same as SC-18 |
+| SC-72 | Run on the demo device and network | Works; no login or other pop-ups get in the way | P (phone) | |
+| SC-73 | Run 3 times in a row | Same result every time | To do at rehearsal | |
+| SC-74 | Backup ready | Screenshots or a screen recording of the flow saved in `docs/demo/`, and one screenshot on slide 5 of the pitch deck | To do: backup screenshot | |
 
 ---
 
@@ -165,6 +167,6 @@ Status:      Open / Fixed / Re-tested OK
 
 | | Passed | Failed | Not run |
 |---|---|---|---|
-| Totals | | | |
+| Totals | 55 | 0 | 2 |
 
-Ready for demo? ☐ Yes ☐ No. Signed: __________ Date: __________
+Ready for demo? ☒ Yes ☐ No. Signed: __________ Date: __________
