@@ -5,6 +5,12 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
+@* Welcome screen on top of everything when the app opens (wireframe 1) *@
+@if (_showWelcome)
+{
+    <WelcomeScreen OnStart="CloseWelcome" />
+}
+
 <MudLayout>
     <MudMainContent Class="page-content">
         @* Small brand name at the top right (new wireframes: no top bar) *@
@@ -46,4 +52,8 @@
             Tertiary = "#0F3D24",                // dark green: big result cards, Welcome screen
         }
     };
+        // Shown once each time the app is opened (or refreshed); "Get started" hides it
+    private bool _showWelcome = true;
+
+    private void CloseWelcome() => _showWelcome = false;
 }
