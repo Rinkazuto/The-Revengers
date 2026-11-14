@@ -5,4 +5,7 @@
   <Folder Name="/frontend/">
     <Project Path="frontend/PowerCheck.Web/PowerCheck.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PowerCheck.DataTests/PowerCheck.DataTests.csproj" />
+  </Folder>
 </Solution>
