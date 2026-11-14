@@ -3,6 +3,7 @@
 // Cyclone battery planner (wildcard "Made for Mauritius").
 // In a cyclone the CEB grid often goes down, and ordinary rooftop solar switches off with it.
 // Only a battery keeps the power on. This tells a family how long their battery lasts.
+// Appliance watts and battery figures come from data/seed (CycloneData).
 
 public static class CycloneEndpoints
 {
@@ -10,13 +11,15 @@ public static class CycloneEndpoints
     {
         var api = app.MapGroup("/api/cyclone");
 
-        // GET /api/cyclone/appliances -> common appliances with typical watts
-        api.MapGet("/appliances", () =>
-            Results.Ok(new AppliancesResponse(CycloneData.Appliances)));
+        // GET /api/cyclone/appliances -> appliances with sourced watts
+        api.MapGet("/appliances", (IWebHostEnvironment env) =>
+            Results.Ok(new AppliancesResponse(CycloneData.Get(env).Appliances)));
 
         // POST /api/cyclone/backup -> send appliances + hours a day, get how long the battery lasts
-        api.MapPost("/backup", (BackupRequest request, AppDbContext db) =>
+        api.MapPost("/backup", (BackupRequest request, AppDbContext db, IWebHostEnvironment env) =>
         {
+            var values = CycloneData.Get(env);
+
             // 1. Check the request
             var errors = new Dictionary<string, string[]>();
             var chosen = request.Appliances ?? new List<BackupApplianceRequest>();
@@ -28,7 +31,7 @@ public static class CycloneEndpoints
             if (duplicates.Count > 0)
                 errors["appliances"] = new[] { $"Each appliance can only be listed once: {string.Join(", ", duplicates)}." };
 
-            var unknown = chosen.Where(a => CycloneData.Appliances.All(k => k.Id != a.Id)).Select(a => a.Id).ToList();
+            var unknown = chosen.Where(a => values.Appliances.All(k => k.Id != a.Id)).Select(a => a.Id).ToList();
             if (unknown.Count > 0)
                 errors["appliances"] = new[] { $"Unknown appliance id: {string.Join(", ", unknown)}. Use GET /api/cyclone/appliances for the list." };
 
@@ -46,12 +49,12 @@ public static class CycloneEndpoints
             // 2. Battery size: what the user sent, or the battery in the CEB price list (5 kWh)
             var schemeBattery = new TariffData(db).GetSolarScheme().SystemPrices.First().BatteryKwh;
             var batteryKwh = request.BatteryKwh ?? schemeBattery;
-            var usableKwh = batteryKwh * CycloneData.UsableBatteryPercent / 100;
+            var usableKwh = batteryKwh * values.UsableBatteryPercent / 100;
 
             // 3. Energy needed per day: watts × hours ÷ 1000 for each appliance
             var kwhPerDay = chosen.Sum(a =>
             {
-                var appliance = CycloneData.Appliances.Single(k => k.Id == a.Id);
+                var appliance = values.Appliances.Single(k => k.Id == a.Id);
                 return appliance.Watts * a.HoursPerDay / 1000;
             });
 
@@ -67,11 +70,11 @@ public static class CycloneEndpoints
             // 5. Explain every number (shown on screen)
             var assumptions = new List<string>
             {
-                $"Usable battery: {CycloneData.UsableBatteryPercent:0.##}% of {batteryKwh:0.##} kWh = {usableKwh:0.##} kWh ({CycloneData.UsableBatterySource}).",
+                $"Usable battery: {values.UsableBatteryPercent:0.##}% of {batteryKwh:0.##} kWh = {usableKwh:0.##} kWh ({values.UsableBatterySource}).",
                 $"Battery size: {schemeBattery:0.##} kWh is the battery in CEB's solar price guide, unless you choose another size.",
                 "The battery is full when the power cut starts.",
                 "We ignore recharging from the panels during the cyclone (heavy cloud), so this is the safe, lower figure.",
-                "Appliance watts are typical values; check the label on your own appliances.",
+                "Appliance watts are from labels and published tables; your own appliances may use less.",
                 "Without a battery, ordinary rooftop solar switches off when the CEB grid goes down.",
                 "For official cyclone warnings, check the Mauritius Meteorological Services (MMS).",
             };
