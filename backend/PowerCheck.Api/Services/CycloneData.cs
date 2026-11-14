@@ -22,10 +22,10 @@ public static class CycloneData
             "Samsung RB29FERNDSA 290 L, sold by Courts Mammouth Mauritius: energy label 311 kWh a year = 35.50 W on average (courtsmammouth.mu, read 14 Nov 2026)"),
     };
 
-    // Huawei LUNA2000-5-E1: 5 kWh usable per module, tested at 100% depth of discharge
-    public const decimal UsableBatteryPercent = 100m;
+    // Huawei LUNA2000-5-E1 lists 5 kWh usable; we keep 80% to allow for inverter losses and ageing (team decision)
+    public const decimal UsableBatteryPercent = 80m;
     public const string UsableBatterySource =
-        "Huawei LUNA2000-5-E1 official specs: 5 kWh usable at 100% depth of discharge; not confirmed as sold in Mauritius, so check your own battery's usable capacity";
+        "conservative: Huawei LUNA2000 lists 5 kWh usable; we allow 20% for inverter losses and battery ageing";
 
     public const decimal MaxBatteryKwh = 50m;
 }
