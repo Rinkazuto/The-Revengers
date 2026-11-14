@@ -1,5 +1,5 @@
 ﻿// Appliance watts and battery figures for the cyclone battery planner.
-// Sources researched by the Integrator. Two values are PLACEHOLDERS until the Data Lead sends a source.
+// Every value has a source. Fridge and battery from the Data Lead (14 Nov 2026).
 
 public static class CycloneData
 {
@@ -18,15 +18,14 @@ public static class CycloneData
             "Virginia Tech BSE-301NP (2020), DOE table"),
         new("phone_charger", "Phone charger", 7.5m,
             "USB Battery Charging spec 1.2 maximum (5 V × 1.5 A), safe side"),
-        // PLACEHOLDER: replace with the annual kWh from an EEMO energy label ÷ 365 ÷ 24 (Data Lead)
-        new("fridge",        "Fridge", 50m,
-            "PENDING SOURCE: average of about 1.2 kWh a day (a fridge cycles on and off); to be replaced with an EEMO energy label value"),
+        new("fridge",        "Fridge", 35.50m,
+            "Samsung RB29FERNDSA 290 L, sold by Courts Mammouth Mauritius: energy label 311 kWh a year = 35.50 W on average (courtsmammouth.mu, read 14 Nov 2026)"),
     };
 
-    // PLACEHOLDER: replace with the depth of discharge from a real battery datasheet (Data Lead)
-    public const decimal UsableBatteryPercent = 80m;
+    // Huawei LUNA2000-5-E1: 5 kWh usable per module, tested at 100% depth of discharge
+    public const decimal UsableBatteryPercent = 100m;
     public const string UsableBatterySource =
-        "PENDING SOURCE: conservative assumption (home lithium batteries are usually 80–95% usable)";
+        "Huawei LUNA2000-5-E1 official specs: 5 kWh usable at 100% depth of discharge; not confirmed as sold in Mauritius, so check your own battery's usable capacity";
 
     public const decimal MaxBatteryKwh = 50m;
 }
