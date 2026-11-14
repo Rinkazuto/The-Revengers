@@ -5,9 +5,12 @@
 <PageTitle>Cyclone: ReVolt</PageTitle>
 
 <MudText Typo="Typo.h5">Cyclone mode</MudText>
-<MudText Typo="Typo.body2" Class="mb-4">How long will your battery keep you going?</MudText>
+<MudText Typo="Typo.body2">How long will your battery keep you going?</MudText>
 
-@* Optional: ONE Kreol line here, written/checked by a native speaker (team decision: no EN/KR switch). *@
+@* ONE Kreol line: DRAFT, must be checked by a native speaker before the demo (team decision: no EN/KR switch) *@
+<MudText Typo="Typo.body2" Class="mb-4" Style="font-style: italic;" lang="mfe">
+    Kan ena siklonn, kombien letan to batri kapav tini?
+</MudText>
 
 @* ---------- 48-hour wind outlook (OpenWeather), turned into battery advice ---------- *@
 @if (_outlook is not null)
@@ -94,7 +97,7 @@ else
             {
                 <MudProgressLinear Indeterminate="true" Color="Color.Secondary" Class="mb-2" />
             }
-            <MudText Typo="Typo.h4" Class="highlight result-big">@BigText(_result.HoursCovered)</MudText>
+            <MudText Typo="Typo.h4" Class="highlight">@BigText(_result.HoursCovered)</MudText>
             <MudText>Uses @Kwh(_result.KwhPerDay) kWh a day</MudText>
             <MudText Typo="Typo.body2" Class="mt-2">@_result.Message</MudText>
         </div>
