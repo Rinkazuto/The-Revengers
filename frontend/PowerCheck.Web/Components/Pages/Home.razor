@@ -9,29 +9,47 @@
 
 @if (_bill is null)
 {
-    @* ---------- INPUT (wireframe: "Calculate bill", screen 1) ---------- *@
-    <MudText Typo="Typo.h5">Your bill</MudText>
-    <MudText Typo="Typo.body2" Class="mb-4">Find this on your CEB bill</MudText>
+    @* ---------- INPUT (wireframe 2 · Your bill) ---------- *@
+    <MudText Typo="Typo.h5"><b>Your bill</b></MudText>
+    <MudText Typo="Typo.body2" Class="mb-4">Units used this month, from your CEB bill</MudText>
 
-    <MudPaper Class="pa-4 mb-4" Elevation="1">
-        <MudNumericField T="decimal?" @bind-Value="_kwh"
-                 Label="Units used this month"
-                 Adornment="Adornment.End" AdornmentText="kWh"
-                 HideSpinButtons="true"
-                 InputMode="InputMode.numeric"
-                 Variant="Variant.Outlined" />
-    </MudPaper>
+    <MudNumericField T="decimal?" @bind-Value="_kwh"
+                     Placeholder="200"
+                     Adornment="Adornment.End" AdornmentText="kWh"
+                     HideSpinButtons="true" InputMode="InputMode.numeric"
+                     Variant="Variant.Outlined" Class="kwh-big mb-4" />
 
-    <MudPaper Class="pa-4 mb-4" Elevation="1">
+    @* Where to find kWh: a mini CEB bill with the number highlighted *@
+    <div class="card-tint mb-4">
+        <div class="d-flex align-center mb-2">
+            <MudIcon Icon="@Icons.Material.Outlined.Description" Size="Size.Small" Class="mr-2" />
+            <MudText><b>Where to find kWh</b></MudText>
+        </div>
+        <div class="bill-sample">
+            <MudText Typo="Typo.caption" Class="d-block">CEB bill · Meter reading data</MudText>
+            <MudText Typo="Typo.caption">Total units consumed (kWh): <span class="bill-sample-value">200</span></MudText>
+        </div>
+    </div>
+
+    @* Tariff: small, opens only when the user taps "change" *@
+    <div class="d-flex align-center mb-2">
+        <MudText Typo="Typo.body2">@TariffLabel(_tariffCode)</MudText>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Class="tap-48 ml-1"
+                   OnClick="ToggleTariffPicker">
+            @(_showTariffPicker ? "done" : "· change")
+        </MudButton>
+    </div>
+    @if (_showTariffPicker)
+    {
         <MudSelect T="string" @bind-Value="_tariffCode" Label="Your CEB tariff"
-                   Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                   Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Class="mb-2">
             @foreach (var tariff in Tariffs)
             {
                 <MudSelectItem T="string" Value="@tariff.Code">@tariff.Label</MudSelectItem>
             }
         </MudSelect>
-        <MudText Typo="Typo.caption">The tariff code is printed on your CEB bill. Not sure? Keep 110.</MudText>
-    </MudPaper>
+        <MudText Typo="Typo.caption" Class="d-block mb-4">The tariff code is printed on your CEB bill. Not sure? Keep 110.</MudText>
+    }
 
     @if (_error is not null)
     {
@@ -39,7 +57,7 @@
     }
 
     <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
-               Class="tap-48" Disabled="_loading" OnClick="CalculateAsync">
+               Class="tap-48 mt-4" Disabled="_loading" OnClick="CalculateAsync">
         @if (_loading)
         {
             <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
@@ -53,20 +71,24 @@
 }
 else
 {
-    @* ---------- RESULT (wireframe: "Calculate bill", screen 2) ---------- *@
-    <MudText Typo="Typo.h4">Rs @Rs(_bill.TotalRs) / month</MudText>
-    <MudText Typo="Typo.body2" Class="mb-4">For @Kwh(_bill.MonthlyKwh) kWh · Tariff @_tariffCode</MudText>
+    @* ---------- RESULT (wireframe 3 · Bill breakdown) ---------- *@
+    <div class="card-dark mb-4">
+        <MudText Typo="Typo.body2">@Kwh(_bill.MonthlyKwh) kWh this month · tariff @_tariffCode</MudText>
+        <MudText Typo="Typo.h4"><b>Rs @Rs(_bill.TotalRs)</b></MudText>
+        <MudText Typo="Typo.caption">per month</MudText>
+    </div>
 
-    <MudPaper Class="pa-4 mb-2" Elevation="1">
-        @foreach (var line in _bill.Lines)
+    <MudText Typo="Typo.body2" Class="mb-2">Higher bands cost more per kWh</MudText>
+
+    <div class="mb-4">
+        @foreach (var (line, index) in _bill.Lines.Select((l, i) => (l, i)))
         {
             <div class="band-row">
                 <div class="d-flex justify-space-between">
-                    <MudText>@BandLabel(line)</MudText>
-                    <MudText><b>Rs @Rs(line.AmountRs)</b></MudText>
+                    <MudText Typo="Typo.body2">@BandLabel(line) · Rs @Rs(line.PricePerKwh)</MudText>
+                    <MudText Typo="Typo.body2"><b>Rs @Rs(line.AmountRs)</b></MudText>
                 </div>
-                <MudProgressLinear Value="@Share(line.AmountRs)" Color="Color.Primary" Rounded="true" Size="Size.Large" />
-                <MudText Typo="Typo.caption">@Kwh(line.Kwh) kWh × Rs @Rs(line.PricePerKwh)</MudText>
+                <div class="band-bar" style="@BarStyle(index, line.AmountRs)"></div>
             </div>
         }
 
@@ -76,12 +98,9 @@ else
                 Your usage is low, so CEB's minimum charge of Rs @Rs(_bill.MinimumChargeRs) applies.
             </MudAlert>
         }
-    </MudPaper>
+    </div>
 
-    <MudText Typo="Typo.body2" Class="mb-1">Higher bands cost more per kWh.</MudText>
-    <MudText Typo="Typo.caption" Class="d-block mb-4">Source: @_bill.Source. Consumption charge only.</MudText>
-
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
+    <MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true" Size="Size.Large"
                Class="tap-48 mb-2" OnClick="GoToSolar">
         See solar savings
     </MudButton>
@@ -94,12 +113,17 @@ else
     <MudButton Variant="Variant.Text" FullWidth="true" Class="tap-48" OnClick="StartOver">
         Change kWh or tariff
     </MudButton>
+
+    <div class="d-flex align-center mt-4">
+        <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" Class="mr-1" />
+        <MudText Typo="Typo.caption">Source: @_bill.Source · consumption charge only</MudText>
+    </div>
 }
 
 @code {
     private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
 
-    // Codes from the agreed contract. Ask the Data Lead for plain-word names for 120 and 140.
+    // Codes from the agreed contract (110 is the default)
     private static readonly (string Code, string Label)[] Tariffs =
     [
         ("110", "Tariff 110 (domestic)"),
@@ -110,6 +134,7 @@ else
 
     private decimal? _kwh;
     private string _tariffCode = "110";
+    private bool _showTariffPicker;
     private BillResponse? _bill;
     private bool _loading;
     private bool _saving;
@@ -125,6 +150,8 @@ else
             _tariffCode = State.TariffCode ?? "110";
         }
     }
+
+    private void ToggleTariffPicker() => _showTariffPicker = !_showTariffPicker;
 
     private async Task CalculateAsync()
     {
@@ -180,21 +207,32 @@ else
         State.LastBill = null;
     }
 
+    private static string TariffLabel(string code) =>
+        Tariffs.FirstOrDefault(t => t.Code == code).Label ?? $"Tariff {code}";
+
     private static string MonthLabel => DateTime.Now.ToString("MMMM yyyy", Inv);   // "November 2026"
 
     private bool MinimumApplies =>
         _bill is not null && _bill.Lines.Sum(l => l.AmountRs) < _bill.MinimumChargeRs;
 
-    private double Share(decimal amount) =>
-        _bill is null || _bill.TotalRs == 0 ? 0 : (double)(amount / _bill.TotalRs * 100);
+    // Bar width = this band's amount compared with the biggest band; higher bands are darker
+    private string BarStyle(int index, decimal amount)
+    {
+        var max = _bill!.Lines.Max(l => l.AmountRs);
+        var width = max == 0 ? 0 : (double)(amount / max) * 100;
+        var count = _bill.Lines.Count;
+        var opacity = count <= 1 ? 1 : 0.35 + 0.65 * index / (count - 1);
+        return $"width: {Math.Max(width, 4).ToString("0", Inv)}%; opacity: {opacity.ToString("0.00", Inv)};";
+    }
 
     // Money always with 2 decimals (contract rule), e.g. 1,216.75
     private static string Rs(decimal value) => value.ToString("N2", Inv);
 
     private static string Kwh(decimal value) => value.ToString("0.##", Inv);
 
+    // The API counts bands from 0 (0–25, 25–50…); CEB bills say units 1–25, 26–50…
     private static string BandLabel(BillLineDto line) =>
         line.ToKwh is null
-            ? $"Above {Kwh(line.FromKwh)} kWh"
-            : $"{Kwh(line.FromKwh)}–{Kwh(line.ToKwh.Value)} kWh";
+            ? $"Above {Kwh(line.FromKwh)}"
+            : $"{Kwh(line.FromKwh + 1)}–{Kwh(line.ToKwh.Value)}";
 }
