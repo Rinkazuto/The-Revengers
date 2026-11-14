@@ -132,6 +132,14 @@ public class MockPowerCheckApi : IPowerCheckApi
             ["FAKE data: usable battery 80%"]);
     }
 
+    public async Task<OutlookResponse> GetOutlookAsync()
+    {
+        await Task.Delay(300);
+        return new OutlookResponse("ok", 30m, 45m, DateTime.UtcNow.AddHours(12),
+            "FAKE: no strong winds forecast. For official cyclone warnings, check MMS.",
+            true, DateTime.UtcNow, "FAKE data");
+    }
+
     // Splits the kWh across the bands, like the real backend does.
     private static BillResponse Bill(decimal kwh)
     {

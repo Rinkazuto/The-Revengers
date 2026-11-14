@@ -152,8 +152,166 @@ h1:focus {
     padding: 16px;
 }
 
-/* Cyclone: appliance rows at least 48 px high, with space between checkbox, watts and hours */
+/* Cyclone: each appliance row is a grid with 3 fixed columns: name | watts | hours.
+   The name column takes the free space and wraps, so the other two never move or get cut off. */
 .appliance-row {
-    min-height: 56px;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px 88px;
+    column-gap: 8px;
+    align-items: center;
+    min-height: 56px; /* Section 6: tap targets 48 px or more */
+}
+
+    .appliance-row.appliance-header {
+        min-height: auto;
+        margin-bottom: 4px;
+    }
+
+/* Long names (e.g. "USB-C charger (phone or laptop)") wrap onto 2 lines instead of pushing the row wider */
+.appliance-name,
+.appliance-name * {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+/* Watts: small, grey, right-aligned, always on one line */
+.appliance-watts {
+    font-size: 12px;
+    text-align: right;
+    white-space: nowrap;
+    color: var(--mud-palette-text-secondary);
+}
+
+    .appliance-watts.appliance-hours-title {
+        text-align: left;
+    }
+
+/* Hours box: always fills its 88 px column */
+.appliance-hours {
+    width: 100%;
+    min-width: 0;
+}
+
+/* ---------- Bill page (new wireframes 2 & 3) ---------- */
+
+/* Big kWh number in the input box */
+.kwh-big input {
+    font-size: 28px;
+    font-weight: 600;
+}
+
+/* "Where to find kWh": a mini CEB bill */
+.bill-sample {
+    background: var(--mud-palette-surface);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+/* The highlighted number on the mini bill */
+.bill-sample-value {
+    background: #FFF3BF;
+    font-weight: 600;
+    padding: 0 4px;
+    border-radius: 4px;
+}
+
+/* Bar under each tariff band (width and darkness set per band in Home.razor) */
+.band-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--mud-palette-primary);
+    margin-top: 4px;
+}
+
+/* ---------- Welcome screen (wireframe 1) ---------- */
+
+/* Covers the whole screen, above the bottom bar, until "Get started" */
+.welcome {
+    position: fixed;
+    inset: 0;
+    z-index: 1300;
+    background: var(--mud-palette-tertiary); /* dark green */
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 24px calc(24px + env(safe-area-inset-bottom));
+    text-align: center;
+}
+
+/* Logo, name and tagline in the middle */
+.welcome-middle {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+.welcome-logo {
+    width: 96px;
+    height: 96px;
+    border-radius: 22px;
+}
+
+.welcome-title {
+    font-size: 40px;
+    font-weight: 700;
+    margin: 0;
+}
+
+    .welcome-title .v {
+        color: var(--mud-palette-secondary); /* yellow V, like the logo */
+    }
+
+.welcome-tagline {
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 300px;
+    margin: 0;
+}
+
+/* Button and note at the bottom, where thumbs reach */
+.welcome-bottom {
+    width: 100%;
+    max-width: 400px;
+}
+
+.welcome-note {
+    font-size: 14px;
+    margin: 12px 0 0;
+    opacity: 0.9;
+}
+
+/* ---------- Polish (#9): match the wireframes on every page ---------- */
+
+/* Buttons in normal text ("Add reading", "See solar savings"), not ALL CAPS, like the wireframes */
+.mud-button-root {
+    text-transform: none;
+}
+
+/* Big yellow result ("Up to about 4.1 days"): smaller on small phones so it doesn't wrap and get cut */
+.result-big {
+    font-size: clamp(1.6rem, 8vw, 2.125rem) !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+}
+
+/* Small phones (iPhone SE, 320 px): give appliance names more room */
+@media (max-width: 360px) {
+    .appliance-row {
+        column-gap: 4px;
+    }
+
+    /* Smaller name text, and less space around the tick box */
+    .appliance-name .mud-typography {
+        font-size: 14px;
+        line-height: 1.3;
+    }
+
+    .appliance-name .mud-icon-button {
+        padding: 6px;
+    }
 }

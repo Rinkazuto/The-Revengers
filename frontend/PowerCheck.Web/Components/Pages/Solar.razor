@@ -23,8 +23,27 @@
 else
 {
     <MudText Typo="Typo.body2" Class="mb-4">
-        Based on @Kwh(State.MonthlyKwh.Value) kWh / month · Tariff @(State.TariffCode ?? "110")
+        @Kwh(State.MonthlyKwh.Value) kWh a month · estimate
     </MudText>
+
+    @* ---------- System size (light green row, at the top) ---------- *@
+    <div class="card-tint mb-3 d-flex justify-space-between align-center" style="padding-top: 8px; padding-bottom: 8px;">
+        <MudText Typo="Typo.body1">System size</MudText>
+        <MudSelect T="decimal" Value="ShownSize" ValueChanged="OnSizeChangedAsync" Disabled="_loading"
+                   Variant="Variant.Text" Dense="true" Underline="false" AnchorOrigin="Origin.BottomCenter"
+                   Style="max-width: 100px; margin-left: 16px; font-weight: 600;">
+            @foreach (var size in Sizes)
+            {
+                <MudSelectItem T="decimal" Value="@size">@Kwh(size) kWp</MudSelectItem>
+            }
+        </MudSelect>
+    </div>
+    @if (_sizeChoice == 0 && _result is not null)
+    {
+        <MudText Typo="Typo.caption" Class="d-block mb-3" Style="margin-top: -8px;">
+            Picked for your usage. Change it if you like.
+        </MudText>
+    }
 
     @if (_loading)
     {
@@ -41,90 +60,84 @@ else
     }
     else if (_result is not null)
     {
-        @* ---------- Today vs With solar, side by side (MudGrid: 2 columns even on phones) ---------- *@
-        <MudGrid Spacing="2" Class="mb-2">
+        @* ---------- Today vs With solar, side by side ---------- *@
+        <MudGrid Spacing="2" Class="mb-3">
             <MudItem xs="6">
-                <MudPaper Class="pa-3" Elevation="1" Style="height: 100%;">
-                    <MudText Typo="Typo.caption">Today</MudText>
-                    <MudText Typo="Typo.h6">Rs @Rs(_result.WithoutSolar.MonthlyBillRs)</MudText>
-                    <MudText Typo="Typo.caption">per month</MudText>
-                </MudPaper>
+                <div class="card-tint" style="height: 100%; padding: 12px;">
+                    <MudText Typo="Typo.body2">Today</MudText>
+                    <MudText Typo="Typo.h6" Style="font-weight: 700; white-space: nowrap;">Rs @Rs(_result.WithoutSolar.MonthlyBillRs)</MudText>
+                </div>
             </MudItem>
             <MudItem xs="6">
-                <MudPaper Class="pa-3" Elevation="1" Style="height: 100%; border: 2px solid var(--mud-palette-primary);">
-                    <MudText Typo="Typo.caption">With solar</MudText>
-                    <MudText Typo="Typo.h6" Color="Color.Primary">Rs @Rs(_result.WithSolar.MonthlyBillRs)</MudText>
-                    <MudText Typo="Typo.caption">per month · tariff 150A</MudText>
-                </MudPaper>
+                <div style="height: 100%; border: 2px solid var(--mud-palette-primary); border-radius: 16px; padding: 12px;">
+                    <MudText Typo="Typo.body2">With solar</MudText>
+                    <MudText Typo="Typo.h6" Style="font-weight: 700; white-space: nowrap;">Rs @Rs(_result.WithSolar.MonthlyBillRs)</MudText>
+                    <MudText Typo="Typo.caption">Tariff 150A</MudText>
+                </div>
             </MudItem>
         </MudGrid>
 
-        @* ---------- Savings and payback ---------- *@
-        <MudPaper Class="pa-4 mb-4" Elevation="1">
+        @* ---------- Savings and payback (dark green card, yellow amount) ---------- *@
+        <div class="card-dark mb-4">
             @if (_result.MonthlySavingsRs > 0)
             {
-                <MudText Typo="Typo.h5" Color="Color.Primary">Save Rs @Rs(_result.MonthlySavingsRs) / month</MudText>
-                <MudText Class="mb-2">That's Rs @Rs(_result.YearlySavingsRs) in the first year.</MudText>
+                <MudText Typo="Typo.h5" Style="font-weight: 700;">
+                    Save <span class="highlight">Rs @Rs(_result.MonthlySavingsRs)</span> a month
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.h6">No monthly saving at this usage.</MudText>
             }
 
             @if (_result.PaybackYears is { } years)
             {
-                <MudText Typo="Typo.h6">Money back in @years.ToString("0.#", Inv) years</MudText>
+                <MudText Typo="Typo.body1" Class="mt-1">Money back in about @years.ToString("0.#", Inv) years</MudText>
             }
             else
             {
-                <MudText Typo="Typo.h6">Solar doesn't pay back at this usage.</MudText>
+                <MudText Typo="Typo.body1" Class="mt-1">Solar doesn't pay back at this usage.</MudText>
             }
+        </div>
 
-                        <MudDivider Class="my-3" />
+        @* ---------- Export credit and cost ---------- *@
+        <div class="d-flex justify-space-between mb-1">
+            <MudText Typo="Typo.body2">Export credit (separate)</MudText>
+            <MudText Typo="Typo.body2"><b>Rs @Rs(_result.WithSolar.ExportCreditRs)</b></MudText>
+        </div>
+        <MudText Typo="Typo.caption" Class="d-block mb-3">
+            A month, for extra solar sent to CEB. Not taken off your bill or counted in your savings.
+        </MudText>
 
-            <div class="d-flex justify-space-between">
-                <MudText Typo="Typo.body2">Export credit (separate)</MudText>
-                <MudText Typo="Typo.body2"><b>Rs @Rs(_result.WithSolar.ExportCreditRs) / month</b></MudText>
-            </div>
-            <MudText Typo="Typo.caption" Class="d-block mb-2">
-                Credit from CEB for extra solar you send to the grid. Not taken off your bill or counted in your savings.
-            </MudText>
+        <div class="d-flex justify-space-between mb-1">
+            <MudText Typo="Typo.body2">Cost after grant and fee</MudText>
+            <MudText Typo="Typo.body2"><b>Rs @Rs(_result.InstallCostRs)</b></MudText>
+        </div>
+        <MudText Typo="Typo.caption" Class="d-block mb-4">
+            After the 25% grant, incl. Rs 2,000 fee. CEB estimate.
+        </MudText>
 
-            <div class="d-flex justify-space-between">
-                <MudText Typo="Typo.body2">Cost after the 25% grant, incl. Rs 2,000 fee</MudText>
-                <MudText Typo="Typo.body2"><b>Rs @Rs(_result.InstallCostRs)</b></MudText>
-            </div>
-            <MudText Typo="Typo.caption">CEB estimate</MudText>
-        </MudPaper>
-
-        @* ---------- Panel size ---------- *@
-        <MudPaper Class="pa-4 mb-4" Elevation="1">
-            <MudSelect T="decimal" Value="_sizeChoice" ValueChanged="OnSizeChangedAsync"
-                       Label="Panel size" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
-                <MudSelectItem T="decimal" Value="0m">Recommended for my usage</MudSelectItem>
-                @foreach (var size in Sizes)
-                {
-                    <MudSelectItem T="decimal" Value="@size">@Kwh(size) kWp</MudSelectItem>
-                }
-            </MudSelect>
-            <MudText Typo="Typo.caption">
-                @Kwh(_result.SystemSizeKwp) kWp makes about @Kwh(Math.Round(_result.WithSolar.MonthlyGenerationKwh)) kWh a month on average.
-            </MudText>
-        </MudPaper>
+        @* ---------- Assumptions (green link, open by default) ---------- *@
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Class="px-0 mb-1" Style="font-weight: 600; text-transform: none;"
+                   EndIcon="@(_showAssumptions ? Icons.Material.Filled.ArrowDropUp : Icons.Material.Filled.ArrowDropDown)"
+                   OnClick="() => _showAssumptions = !_showAssumptions">
+            Assumptions
+        </MudButton>
+        @if (_showAssumptions)
+        {
+            @foreach (var assumption in _result.Assumptions)
+            {
+                <MudText Typo="Typo.body2" Class="mb-2">• @assumption</MudText>
+            }
+            <MudText Typo="Typo.caption" Class="d-block mb-3">Source: @_result.Source</MudText>
+        }
 
         @* ---------- How to apply ---------- *@
         <MudButton Href="@SchemeLeafletUrl" Target="_blank"
-                   Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
+                   Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true"
                    EndIcon="@Icons.Material.Filled.OpenInNew" Class="tap-48 mb-4">
-            How to apply
+            How to apply (CEB leaflet)
         </MudButton>
-
-        @* ---------- Where the numbers come from ---------- *@
-        <MudExpansionPanels Elevation="1" Class="mb-4">
-            <MudExpansionPanel Text="How we worked this out">
-                @foreach (var assumption in _result.Assumptions)
-                {
-                    <MudText Typo="Typo.body2" Class="mb-2">• @assumption</MudText>
-                }
-                <MudText Typo="Typo.caption">Source: @_result.Source</MudText>
-            </MudExpansionPanel>
-        </MudExpansionPanels>
     }
 }
 
@@ -142,6 +155,10 @@ else
     private SolarResponse? _result;
     private bool _loading;
     private string? _error;
+    private bool _showAssumptions = true;
+
+    // The size shown in the picker: the user's choice, or the size the backend recommended
+    private decimal ShownSize => _sizeChoice != 0 ? _sizeChoice : _result?.SystemSizeKwp ?? 0;
 
     protected override async Task OnInitializedAsync()
     {

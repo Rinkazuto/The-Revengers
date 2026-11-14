@@ -22,65 +22,62 @@ else if (_error is not null)
         Try again
     </MudButton>
 }
-else if (_readings.Count == 0)
+else if (_readings.Count > 0)
 {
-    <MudPaper Class="pa-4 mb-4" Elevation="1">
-        <MudText>No readings yet. Add your first month below to start tracking your usage.</MudText>
-    </MudPaper>
-}
-else
-{
-    @* ---------- Bar chart: last 6 months, oldest on the left ---------- *@
-    <MudPaper Class="pa-4 mb-4" Elevation="1">
+    @* ---------- Bar chart (light green card): last 6 months, oldest on the left, newest bar in yellow ---------- *@
+    <div class="card-tint mb-3">
         <div class="bar-chart">
-            @foreach (var reading in _readings.TakeLast(6))
+            @foreach (var reading in LastSix)
             {
                 <div class="bar-col">
-                    <span class="bar-value">@Kwh(reading.Kwh)</span>
-                    <div class="bar" style="@BarStyle(reading.Kwh)"></div>
+                    <div class="bar" style="@BarStyle(reading)"></div>
                     <span class="bar-label">@ShortMonth(reading.Month)</span>
                 </div>
             }
         </div>
-        <MudText Typo="Typo.caption" Class="d-block mt-2">kWh per month</MudText>
-    </MudPaper>
+    </div>
 
-    @* ---------- Trend vs the previous saved month ---------- *@
+    @* ---------- Trend pill vs the previous saved month ---------- *@
     @if (TrendText is not null)
     {
-        <div class="d-flex align-center mb-4">
-            <MudIcon Icon="@TrendIcon" Color="@TrendColor" Class="mr-2" />
-            <MudText Typo="Typo.h6">@TrendText</MudText>
+        <div class="d-flex align-center mb-4"
+             style="background: @TrendBackground; border-radius: 12px; padding: 8px 12px;">
+            <MudIcon Icon="@TrendIcon" Size="Size.Small" Class="mr-2" />
+            <MudText Typo="Typo.body2" Style="font-weight: 600;">@TrendText</MudText>
         </div>
     }
 
     @* ---------- List: newest first ---------- *@
-    <MudPaper Class="mb-4" Elevation="1">
+    <div class="mb-4">
         @foreach (var reading in _readings.AsEnumerable().Reverse())
         {
-            <div class="reading-row d-flex justify-space-between align-center px-4 py-2">
+            <div class="reading-row d-flex justify-space-between align-center">
                 <div>
-                    <MudText>@LongMonth(reading.Month)</MudText>
-                    <MudText Typo="Typo.caption">Bill about Rs @Rs(reading.BillRs) (tariff 110)</MudText>
+                    <MudText Typo="Typo.body1">@LongMonth(reading.Month)</MudText>
+                    <MudText Typo="Typo.caption">Bill about Rs @Rs(reading.BillRs)</MudText>
                 </div>
-                <MudText><b>@Kwh(reading.Kwh) kWh</b></MudText>
+                <MudText Typo="Typo.body1"><b>@Kwh(reading.Kwh)</b> kWh</MudText>
             </div>
             <MudDivider />
         }
-    </MudPaper>
+    </div>
 }
 
-@* ---------- Add reading: button, or the form when open ---------- *@
+@* ---------- Add reading: big green button, or the form when open ---------- *@
 @if (!_adding)
 {
     <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
-               Class="tap-48" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenForm">
+               Class="tap-48" Style="border-radius: 12px; font-weight: 700; text-transform: none;" OnClick="OpenForm">
         Add reading
     </MudButton>
+    @if (!_loading && _error is null && _readings.Count == 0)
+    {
+        <MudText Typo="Typo.body2" Align="Align.Center" Class="mt-2">Add your first reading</MudText>
+    }
 }
 else
 {
-    <MudPaper Class="pa-4 mb-4" Elevation="1">
+    <div class="card-tint mb-4">
         <MudText Typo="Typo.h6" Class="mb-2">Add a reading</MudText>
 
         <MudSelect T="string" @bind-Value="_newMonth" Label="Month"
@@ -105,18 +102,22 @@ else
         }
 
         <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
-                   Class="tap-48 mb-2" Disabled="_saving" OnClick="SaveAsync">
+                   Class="tap-48 mb-2" Style="border-radius: 12px; text-transform: none;" Disabled="_saving" OnClick="SaveAsync">
             @(_saving ? "Saving…" : "Save reading")
         </MudButton>
-        <MudButton Variant="Variant.Text" FullWidth="true" Class="tap-48" Disabled="_saving" OnClick="CloseForm">
+        <MudButton Variant="Variant.Text" FullWidth="true" Class="tap-48" Style="text-transform: none;" Disabled="_saving" OnClick="CloseForm">
             Cancel
         </MudButton>
-    </MudPaper>
+    </div>
 }
 
 @code {
     private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
     private const double MaxBarPx = 110;
+
+    // Design colours: soft green bars, newest bar in the logo yellow
+    private const string BarGreen = "#8FC89A";
+    private const string BarNewest = "var(--mud-palette-secondary)";
 
     private List<ReadingDto> _readings = new();   // oldest → newest (as the API sends them)
     private bool _loading;
@@ -127,6 +128,8 @@ else
     private string _newMonth = ThisMonth;
     private decimal? _newKwh;
     private string? _formError;
+
+    private List<ReadingDto> LastSix => _readings.TakeLast(6).ToList();
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
@@ -191,9 +194,12 @@ else
             if (_readings.Count < 2) return null;
             var previous = _readings[^2];
             var last = _readings[^1];
-            var vs = $"vs {ShortMonth(previous.Month)} {previous.Month[..4]}";
 
-            if (last.Kwh == previous.Kwh) return $"Same as {ShortMonth(previous.Month)} {previous.Month[..4]}";
+            // "vs last month" when the two months follow each other, otherwise name the month
+            var isPreviousMonth = ParseMonth(previous.Month).AddMonths(1) == ParseMonth(last.Month);
+            var vs = isPreviousMonth ? "vs last month" : $"vs {ShortMonth(previous.Month)} {previous.Month[..4]}";
+
+            if (last.Kwh == previous.Kwh) return isPreviousMonth ? "Same as last month" : $"Same as {ShortMonth(previous.Month)} {previous.Month[..4]}";
             var direction = last.Kwh > previous.Kwh ? "Up" : "Down";
             if (previous.Kwh == 0) return $"{direction} {vs}";
 
@@ -210,15 +216,17 @@ else
         : UsageDown ? Icons.Material.Filled.TrendingDown
         : Icons.Material.Filled.TrendingFlat;
 
-    // Using more electricity is bad news (orange), using less is good news (green)
-    private Color TrendColor => UsageUp ? Color.Warning : UsageDown ? Color.Success : Color.Default;
+    // Using more is a warning (light yellow pill), using less is good news (light green pill)
+    private string TrendBackground => UsageUp ? "#FFF3C4" : UsageDown ? "#EEF6EF" : "#F2F2F2";
 
-    // ---------- Chart: bar height in pixels, relative to the biggest of the 6 months ----------
-    private string BarStyle(decimal kwh)
+    // ---------- Chart: bar height relative to the biggest of the 6 months; newest bar in yellow ----------
+    private string BarStyle(ReadingDto reading)
     {
-        var max = _readings.TakeLast(6).Max(r => r.Kwh);
-        var px = max == 0 ? 4 : Math.Max(4, (double)(kwh / max) * MaxBarPx);
-        return $"height: {px.ToString("0", Inv)}px";
+        var six = LastSix;
+        var max = six.Max(r => r.Kwh);
+        var px = max == 0 ? 4 : Math.Max(4, (double)(reading.Kwh / max) * MaxBarPx);
+        var colour = reading == six[^1] ? BarNewest : BarGreen;
+        return $"height: {px.ToString("0", Inv)}px; background: {colour};";
     }
 
     // ---------- Months ----------
@@ -232,7 +240,7 @@ else
         DateTime.ParseExact(month, "yyyy-MM", Inv);
 
     private static string ShortMonth(string month) => ParseMonth(month).ToString("MMM", Inv);        // "Oct"
-    private static string LongMonth(string month) => ParseMonth(month).ToString("MMMM yyyy", Inv);   // "October 2026"
+    private static string LongMonth(string month) => ParseMonth(month).ToString("MMM yyyy", Inv);    // "Oct 2026"
 
     // ---------- Numbers ----------
     private static string Rs(decimal value) => value.ToString("N2", Inv);
