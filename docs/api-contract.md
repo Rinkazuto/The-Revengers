@@ -1,4 +1,4 @@
-# Power Check: API Contract
+# ReVolt: API Contract
 
 **Status:** AGREED (13 Nov 2026) by the Backend Lead, Data Lead, Frontend Lead and Integrator. See `docs/decision-log.md`.
 **Living document:** last updated 14 Nov 2026. Parts marked 🔄 are agreed but not built yet. Every change is listed in "Changes since the first draft" at the bottom.
