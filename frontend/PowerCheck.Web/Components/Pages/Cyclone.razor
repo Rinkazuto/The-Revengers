@@ -62,11 +62,11 @@ else
         {
             <div class="appliance-row d-flex align-center">
                 <MudCheckBox T="bool" Value="row.Selected" ValueChanged="@(value => OnSelectedChangedAsync(row, value))"
-                             Color="Color.Primary" Label="@row.Appliance.Name" Class="flex-grow-1" />
-                <MudText Typo="Typo.caption">@Watts(row.Appliance.Watts) W</MudText>
+                             Color="Color.Primary" Label="@row.Appliance.Name" Class="flex-grow-1" Style="min-width: 0;" />
+                <MudText Typo="Typo.caption" Style="white-space: nowrap; flex-shrink: 0;">@Watts(row.Appliance.Watts) W</MudText>
                 <MudSelect T="decimal" Value="row.Hours" ValueChanged="@(hours => OnHoursChangedAsync(row, hours))"
                            Disabled="!row.Selected" Variant="Variant.Outlined" Margin="Margin.Dense"
-                           AnchorOrigin="Origin.BottomCenter" Style="max-width: 90px;">
+                           AnchorOrigin="Origin.BottomCenter" Style="width: 90px; flex-shrink: 0;">
                     @foreach (var hours in HourOptions)
                     {
                         <MudSelectItem T="decimal" Value="@hours">@hours h</MudSelectItem>
