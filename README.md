@@ -6,6 +6,7 @@ Team **The Revengers** · Theme 3: *Powered to Live Better*
 
 **Try it on your phone:** <https://revolt-rb.azurewebsites.net> (no account needed)
 API and Swagger: <https://revolt-api-rb.azurewebsites.net/swagger>
+**Demo video (about 2 min):** [`docs/demo/ReVolt_Demo.mp4`](docs/demo/ReVolt_Demo.mp4)
 *(Free hosting plan: the first load after a quiet spell can take about 20 seconds.)*
 
 > The app started as "Power Check", so the code folders are still called `PowerCheck.Api` and `PowerCheck.Web`. Same app.
@@ -203,7 +204,7 @@ powershell -ExecutionPolicy Bypass -File scripts\deploy-azure.ps1 -Suffix rb
 | `docs/decision-log.md` | Key decisions with times |
 | `docs/board.md` | Board plan, columns, labels and branch flow |
 | `docs/slides/` | Pitch deck |
-| `docs/demo/` | Pitch script, Q&A prep and backup demo video |
+| `docs/demo/` | Demo video (`ReVolt_Demo.mp4`), pitch script and Q&A prep |
 | `docs/wireframes/` | Figma screens and flows |
 | `docs/logo/`, `docs/logo.png` | ReVolt logo files |
 | `docs/screenshots/` | Screenshots used in the README and slides |
