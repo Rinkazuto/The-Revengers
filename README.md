@@ -7,6 +7,7 @@ Team **The Revengers** · Theme 3: *Powered to Live Better*
 **Try it on your phone:** <https://revolt-rb.azurewebsites.net> (no account needed)
 API and Swagger: <https://revolt-api-rb.azurewebsites.net/swagger>
 **Demo video (about 2 min):** [`docs/demo/ReVolt_Demo.mp4`](docs/demo/ReVolt_Demo.mp4)
+**Pitch slides:** [`docs/slides/ReVolt_Pitch_Deck.pptx`](docs/slides/ReVolt_Pitch_Deck.pptx) · Decision log: [`docs/decision-log.md`](docs/decision-log.md)
 *(Free hosting plan: the first load after a quiet spell can take about 20 seconds.)*
 
 > The app started as "Power Check", so the code folders are still called `PowerCheck.Api` and `PowerCheck.Web`. Same app.
