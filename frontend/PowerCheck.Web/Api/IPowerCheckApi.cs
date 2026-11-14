@@ -12,5 +12,6 @@ public interface IPowerCheckApi
 
     // Cyclone mode (surprise card "Made for Mauritius")
     Task<AppliancesResponse> GetAppliancesAsync();                      // GET  /api/cyclone/appliances
-    Task<BackupResponse> CalculateBackupAsync(BackupRequest request);   // POST /api/cyclone/backup                          // GET  /api/readings
+    Task<BackupResponse> CalculateBackupAsync(BackupRequest request);   // POST /api/cyclone/backup
+    Task<OutlookResponse> GetOutlookAsync();                            // GET  /api/cyclone/outlook                 // GET  /api/readings
 }
