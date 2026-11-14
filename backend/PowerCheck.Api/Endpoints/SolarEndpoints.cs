@@ -2,7 +2,7 @@
 using PowerCheck.Api.Data;
 
 // Endpoint for the solar estimate (the main feature).
-// Uses the real CEB tariff and 2026 solar scheme from the database.
+// Without solar: the home's normal tariff. With solar: prosumer tariff 150A/150B (GN 473/2026).
 
 public static class SolarEndpoints
 {
@@ -10,12 +10,13 @@ public static class SolarEndpoints
     {
         var api = app.MapGroup("/api");
 
-        // POST /api/solar/estimate -> send kWh (+ optional size), get without vs with solar
+        // POST /api/solar/estimate -> send kWh (+ optional size, tariff, phase), get without vs with solar
         api.MapPost("/solar/estimate", (SolarRequest request, AppDbContext db) =>
         {
             var data = new TariffData(db);
             var scheme = data.GetSolarScheme();
             var sizes = scheme.SystemPrices.Select(p => p.SystemKwp).OrderBy(s => s).ToList();
+            var phase = request.Phase ?? "single";
 
             // 1. Check the request
             var errors = new Dictionary<string, string[]>();
@@ -29,10 +30,13 @@ public static class SolarEndpoints
             if (!data.IsKnownTariff(request.TariffCode))
                 errors["tariffCode"] = new[] { $"Unknown tariffCode '{request.TariffCode}'. Known codes: {string.Join(", ", data.TariffCodes())}." };
 
+            if (phase != "single" && phase != "three")
+                errors["phase"] = new[] { "phase must be \"single\" (tariff 150A) or \"three\" (tariff 150B)." };
+
             if (errors.Count > 0)
                 return Results.ValidationProblem(errors);
 
-            // 2. Get the real tariff in force today
+            // 2. Without solar: the home's normal tariff in force today
             var tariff = data.GetTariff(request.TariffCode);
             if (tariff is null)
                 return Results.ValidationProblem(new Dictionary<string, string[]>
@@ -40,18 +44,26 @@ public static class SolarEndpoints
                     ["tariffCode"] = new[] { $"Tariff '{request.TariffCode}' has no prices in force today." }
                 });
 
-            // 3. The CST charge rates (net metering), from the scheme table
+            // 3. With solar: the prosumer tariff (150A single-phase, 150B three-phase) in force today
+            var prosumer = data.GetProsumerTariff(phase);
+            if (prosumer is null)
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["phase"] = new[] { $"No prosumer tariff in force today for phase '{phase}'." }
+                });
+
+            // 4. The CST charge rates, from the scheme table
             var p = db.SolarSchemeParameters.AsNoTracking().ToDictionary(x => x.Parameter, x => x.Value);
             var cst = new CstRates(
                 p["cst_rate_up_to_500_kwh"],
                 p["cst_rate_501_to_1000_kwh"],
                 p["cst_rate_above_1000_kwh"]);
 
-            // 4. Use the smallest CEB size that covers the usage if the user didn't choose one
+            // 5. Use the smallest CEB size that covers the usage if the user didn't choose one
             var size = request.SystemSizeKwp ?? SolarCalculator.DefaultSize(request.MonthlyKwh, scheme);
 
-            // 5. Do the maths and send it back
-            var result = SolarCalculator.Calculate(request.MonthlyKwh, size, tariff, scheme, cst);
+            // 6. Do the maths and send it back
+            var result = SolarCalculator.Calculate(request.MonthlyKwh, size, tariff, prosumer, scheme, cst);
             return Results.Ok(result);
         });
     }
