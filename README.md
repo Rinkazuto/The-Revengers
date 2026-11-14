@@ -2,6 +2,9 @@
 
 Team **The Revengers**: Theme 3, *Powered to Live Better*.
 
+**Try it on your phone:** <https://revolt-rb.azurewebsites.net> · API and Swagger: <https://revolt-api-rb.azurewebsites.net/swagger>
+*(Free hosting plan: the first load after a quiet spell can take about 20 seconds.)*
+
 > The app started as "Power Check", so the code folders are still called `PowerCheck.Api` and `PowerCheck.Web`. Same app.
 
 ## Problem
@@ -27,6 +30,7 @@ Team **The Revengers**: Theme 3, *Powered to Live Better*.
 We used AI as a helper. The team chose the idea, the features and the data sources, and checked the results.
 
 - **Claude (Integrator):** help with Git and GitHub commands, drafting the board cards, the API contract and this README, a first version of the CI workflow, and double-checking test results against our own hand calculations.
+- **Claude (Data Lead):** help reading the CEB, Government Gazette and PVGIS documents, a first draft of the seed CSV files and expected test results, and rechecking our sums. Each figure was checked by hand against its source document before it went into the app.
 - <!-- Each teammate: add your tool and what you used it for, in one line. -->
 
 All tariff, solar and cyclone figures come from the official sources listed above, not from AI.
