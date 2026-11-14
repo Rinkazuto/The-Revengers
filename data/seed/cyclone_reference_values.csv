@@ -6,3 +6,6 @@ beaufort_force_10_min_knots,48,knots,"Met Office, Beaufort wind force scale","Fo
 knot_in_kmh,1.852,km/h per knot,International nautical mile = 1852 m (exact),Used to convert knots to km/h
 beaufort_force_8_min_kmh,62.968,km/h,Derived: 34 knots x 1.852,Lower limit of force 8
 beaufort_force_10_min_kmh,88.896,km/h,Derived: 48 knots x 1.852,Lower limit of force 10
+inverter_european_weighted_efficiency,97.8,percent,Huawei SUN2000-5KTL-L1 specifications page (solar.huawei.com/au/products/SUN2000-5-6KTL-L1/specs/),"""European weighted efficiency 97.8%""; hybrid inverter that pairs with the LUNA2000 battery"
+inverter_max_efficiency,98.4,percent,Huawei SUN2000-5KTL-L1 specifications page (solar.huawei.com/au/products/SUN2000-5-6KTL-L1/specs/),"""Max. efficiency 98.4%"""
+battery_usable_at_socket_kwh_derived,4.89,kWh,Derived: 5 kWh usable x 97.8% European weighted inverter efficiency,Energy reaching the appliances from a full 5 kWh battery
