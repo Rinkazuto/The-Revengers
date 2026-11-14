@@ -152,8 +152,43 @@ h1:focus {
     padding: 16px;
 }
 
-/* Cyclone: appliance rows at least 48 px high, with space between checkbox, watts and hours */
+/* Cyclone: each appliance row is a grid with 3 fixed columns: name | watts | hours.
+   The name column takes the free space and wraps, so the other two never move or get cut off. */
 .appliance-row {
-    min-height: 56px;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px 88px;
+    column-gap: 8px;
+    align-items: center;
+    min-height: 56px; /* Section 6: tap targets 48 px or more */
+}
+
+    .appliance-row.appliance-header {
+        min-height: auto;
+        margin-bottom: 4px;
+    }
+
+/* Long names (e.g. "USB-C charger (phone or laptop)") wrap onto 2 lines instead of pushing the row wider */
+.appliance-name,
+.appliance-name * {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+/* Watts: small, grey, right-aligned, always on one line */
+.appliance-watts {
+    font-size: 12px;
+    text-align: right;
+    white-space: nowrap;
+    color: var(--mud-palette-text-secondary);
+}
+
+    .appliance-watts.appliance-hours-title {
+        text-align: left;
+    }
+
+/* Hours box: always fills its 88 px column */
+.appliance-hours {
+    width: 100%;
+    min-width: 0;
 }

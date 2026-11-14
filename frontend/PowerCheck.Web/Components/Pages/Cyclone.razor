@@ -52,21 +52,23 @@ else
     }
 
     @* ---------- Keep running: appliances, watts, hours a day ---------- *@
-    <div class="card-tint mb-3">
-        <div class="d-flex justify-space-between mb-1">
+        <div class="card-tint mb-3">
+        @* Header row: same 3 columns as the appliance rows, so the titles line up *@
+        <div class="appliance-row appliance-header">
             <MudText Typo="Typo.body2"><b>Keep running</b></MudText>
-            <MudText Typo="Typo.caption">watts · hours a day</MudText>
+            <span class="appliance-watts">watts</span>
+            <span class="appliance-watts appliance-hours-title">hours a day</span>
         </div>
 
         @foreach (var row in _rows)
         {
-            <div class="appliance-row d-flex align-center">
+            <div class="appliance-row">
                 <MudCheckBox T="bool" Value="row.Selected" ValueChanged="@(value => OnSelectedChangedAsync(row, value))"
-                             Color="Color.Primary" Label="@row.Appliance.Name" Class="flex-grow-1" />
-                <MudText Typo="Typo.caption">@Watts(row.Appliance.Watts) W</MudText>
+                             Color="Color.Primary" Label="@row.Appliance.Name" Class="appliance-name" />
+                <span class="appliance-watts">@Watts(row.Appliance.Watts) W</span>
                 <MudSelect T="decimal" Value="row.Hours" ValueChanged="@(hours => OnHoursChangedAsync(row, hours))"
                            Disabled="!row.Selected" Variant="Variant.Outlined" Margin="Margin.Dense"
-                           AnchorOrigin="Origin.BottomCenter" Style="max-width: 90px;">
+                           AnchorOrigin="Origin.BottomCenter" Class="appliance-hours">
                     @foreach (var hours in HourOptions)
                     {
                         <MudSelectItem T="decimal" Value="@hours">@hours h</MudSelectItem>
@@ -182,12 +184,8 @@ else
         _ => Severity.Success,
     };
 
-    private static string OutlookTitle(string level) => level switch
-    {
-        "chargeNow" => "Storm-force winds expected",
-        "charge" => "Strong winds expected",
-        _ => "No strong winds in the next 48 hours",
-    };
+        // A neutral title: the colour shows the level, and the backend's advice says what it means
+    private static string OutlookTitle(string level) => "48-hour wind outlook";
 
     // The API sends UTC; Mauritius is UTC+4 all year (no daylight saving)
     private static string MauritiusTime(DateTime utc) => utc.AddHours(4).ToString("ddd d MMM, HH:mm", Inv);
