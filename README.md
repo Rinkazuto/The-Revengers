@@ -47,6 +47,8 @@ cd The-Revengers
 git switch main
 ```
 
+> **Run both projects.** The website gets all its numbers from the API, so the API (step 2) must be running before you use the website (step 3). Two terminals, or Visual Studio below.
+
 ### 2. Start the API (terminal 1)
 ```bash
 dotnet run --project backend/PowerCheck.Api
@@ -60,7 +62,15 @@ dotnet run --project backend/PowerCheck.Api
 dotnet run --project frontend/PowerCheck.Web
 ```
 - Open <http://localhost:5062>.
-- The website gets its data from the API at `ApiBaseUrl` in `frontend/PowerCheck.Web/appsettings.json`. `"UseMockApi"` must be `false` to use the real API (with `true` it shows built-in sample data).
+- The website calls the API at `ApiBaseUrl` (`http://localhost:5012/`) in `frontend/PowerCheck.Web/appsettings.json`. `"UseMockApi": false` (the default) uses the real API. `true` shows built-in sample data, only for working on the layout without the API.
+
+### Or: run both from Visual Studio
+1. Open `PowerCheck.slnx`.
+2. Right-click the solution in Solution Explorer → **Configure Startup Projects…**
+3. Choose **Multiple startup projects**, set **PowerCheck.Api** and **PowerCheck.Web** to **Start**, put PowerCheck.Api first → **OK**.
+4. Press **Ctrl+F5** (or F5 to debug). Both start; open <http://localhost:5062>.
+
+This setting is saved on your own computer only, so each teammate does it once.
 
 ### 4. Check everything works (one command)
 With both closed, from the repo root:
@@ -95,8 +105,8 @@ The API rebuilds the database on start, so a reset gives clean real data and no 
 ### If something goes wrong
 | You see | Fix |
 |---|---|
-| "Can't reach the ... server" on the website | The API isn't running: do step 2. |
-| Numbers don't match the API / look like samples | `UseMockApi` is `true` in `frontend/PowerCheck.Web/appsettings.json`. Set it to `false`. |
+| "Can't reach the ReVolt server" on the website | The API isn't running: do step 2 (or start both from Visual Studio). |
+| Numbers look like samples | `UseMockApi` was set to `true` in `frontend/PowerCheck.Web/appsettings.json`. Set it back to `false`. |
 | "address already in use" | Another copy is running. Close that terminal (Ctrl+C) and try again. |
 | Old numbers after an update | Do the reset above so the new tables load. |
 
