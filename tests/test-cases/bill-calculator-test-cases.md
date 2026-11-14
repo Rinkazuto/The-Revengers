@@ -3,7 +3,7 @@
 **Feature:** Bill calculator. Enter monthly kWh and see the bill split by CEB tariff band.
 **Endpoint:** `POST /api/bill/calculate` (also `GET /api/tariffs`)
 **Owner:** Design, QA and Pitch lead
-**Status:** Ready to run. The backend uses the real CEB data (merged into `main`, 14 Nov 2026). ⚠️ The website still has `"UseMockApi": true` in `frontend/PowerCheck.Web/appsettings.json`, so **in-app** checks only test the real numbers once the Frontend Lead sets it to `false`. API checks in Swagger work now.
+**Status:** Ready to run. The backend uses the real CEB data (merged into `main`, 14 Nov 2026). The website uses the real API (`"UseMockApi": false`, #113), so in-app and Swagger checks both test the real numbers. Live app: https://revolt-rb.azurewebsites.net
 
 **API test run (14 Nov 2026, `main` at 94c3497, fresh database):** every case checkable through the API **passed** (109 checks across the four files, plus the restart test RD-31). In the Result column, **P (API)** = passed through the API; **API ✓, check on phone** = the numbers passed, and the screen still needs checking. Blank results are phone and screen checks for the phone test run (board #30).
 
@@ -146,7 +146,7 @@ The API accepts 0 to 5000 kWh and returns **400** otherwise.
 | ID | Check | Expected | Result | Notes |
 |---|---|---|---|---|
 | BC-60 | Source line | "Source: CEB tariffs 2026" visible; link opens https://ceb.mu/tariffs | P (API) | |
-| BC-61 | No test text | The word "FAKE" or "mock" appears nowhere on screen or in the API response (check after `UseMockApi` is set to `false`) | P (API + phone) | |
+| BC-61 | No test text | The word "FAKE" or "mock" appears nowhere on screen or in the API response (`UseMockApi` is `false` since #113) | P (API + phone) | |
 | BC-62 | Money format | "Rs" with thousands separators: Rs 1,216.75, not Rs 1216.75 or Rs 1216.7500 | P (phone) | |
 | BC-63 | Band labels | Match CEB wording: 1–25, 26–50, …, "2001 and above" | P (phone) | |
 | BC-64 | Band bars | Higher bands look darker; label and amount readable on each | P (phone) | |
@@ -177,7 +177,7 @@ Checked against the code on `main` on 14 Nov 2026.
 | 3 | Risk of being 1 kWh short per band | ✅ Fixed: the loader subtracts 1 from CEB's band starts (`Seeder.cs`). BC-30 to BC-39 still check it |
 | 4 | Rounding decision | ✅ Decided: the app shows 2 decimals (F2) |
 | 5 | Source link | ✅ Fixed: tariffs from 2026 link to https://ceb.mu/tariffs; 2023 rates link to the Feb 2023 tariff schedule |
-| 6 | **New:** the website still has `"UseMockApi": true` | ⏳ Frontend Lead to set it to `false`. Until then, in-app results are mock data; test numbers through Swagger |
+| 6 | The website had `"UseMockApi": true` | ✅ Fixed in #113: the website uses the real API |
 
 ---
 

@@ -1,7 +1,7 @@
 # ReVolt: API Contract
 
 **Status:** AGREED (13 Nov 2026) by the Backend Lead, Data Lead, Frontend Lead and Integrator. See `docs/decision-log.md`.
-**Living document:** last updated 14 Nov 2026. Parts marked 🔄 are agreed but not built yet. Every change is listed in "Changes since the first draft" at the bottom.
+**Living document:** last updated 14 Nov 2026 (after the `v1-demo` feature freeze). Everything in this contract is built and live. Every change is listed in "Changes since the first draft" at the bottom.
 
 **Owner:** Integrator. Changes go through a PR and get announced in the team chat. The C# shapes live in `backend/PowerCheck.Api/Contracts/ApiContracts.cs`; this file and that file must always match.
 
@@ -12,6 +12,7 @@
 | Item | Value |
 |---|---|
 | Base URL (local) | `http://localhost:5012` |
+| Base URL (live) | `https://revolt-api-rb.azurewebsites.net` (Azure App Service). Swagger: `/swagger` |
 | Prefix | All endpoints start with `/api` |
 | Format | JSON, property names in `camelCase` |
 | Money | Mauritian rupees (`Rs`), decimal, rounded to 2 places. **Frontend: always display with `F2`** (e.g. `value.ToString("F2")`), because SQLite returns `12.8` for `12.80`. |
@@ -271,12 +272,12 @@ How long a battery keeps the chosen appliances running during a power cut.
 }
 ```
 - `kwhPerDay` = sum of (`watts` × `hoursPerDay`) ÷ 1000.
-- `hoursCovered` = usable kWh ÷ `kwhPerDay` × 24, 1 decimal. Usable kWh = `batteryKwh` × usable % (depth of discharge, sourced by the Data Lead).
-- Assumes the battery is full when the cut starts, and does not count solar recharging, so the figure is on the safe side.
+- `hoursCovered` = usable kWh ÷ `kwhPerDay` × 24, 1 decimal. Usable kWh = `batteryKwh` × **97.8%** (Huawei SUN2000-5KTL-L1 weighted inverter efficiency; Huawei LUNA2000 lists 5 kWh usable), from `data/seed/cyclone_reference_values.csv`.
+- `message` says **"up to about … days/hours"**: it assumes a new, fully charged battery. The assumptions add that real time is usually shorter (inverters lose more at small loads, older batteries hold less), and that recharging from the panels during the cyclone is not counted.
 
-## 8. GET `/api/cyclone/outlook` (only if done before the feature freeze)
+## 8. GET `/api/cyclone/outlook`
 
-Wind outlook for the next 48 hours, turned into **battery advice**. It is not a cyclone warning.
+Wind outlook for the next 48 hours, turned into **battery advice**. It is not a cyclone warning. Shown as a banner at the top of the Cyclone page.
 
 **Response 200**
 ```json
@@ -292,11 +293,12 @@ Wind outlook for the next 48 hours, turned into **battery advice**. It is not a 
 }
 ```
 - Data: OpenWeather's **free 5 day / 3 hour forecast** for the PVGIS point (-20.25, 57.55), the next 16 entries = 48 hours. Wind in m/s × 3.6 = km/h.
-- `level` comes from **sustained wind** (`wind.speed`), WMO Beaufort scale: `"ok"` below 62 km/h, `"charge"` from 62 km/h (Beaufort 8, gale), `"chargeNow"` from 89 km/h (Beaufort 10, storm). Gusts only appear in the `advice` text.
+- `level` comes from **sustained wind** (`wind.speed`), Beaufort scale (Met Office): `"ok"` below 62.97 km/h, `"charge"` from 62.97 km/h (Beaufort 8, gale, 34 knots), `"chargeNow"` from 88.90 km/h (Beaufort 10, storm, 48 knots). Values from `data/seed/cyclone_reference_values.csv`. Gusts only appear in the `advice` text.
 - `advice` is battery advice only and always ends with "For official cyclone warnings, check MMS."
 - Times are UTC. The frontend shows them in Mauritius time (UTC+4).
-- **Never breaks on stage:** 3-second timeout, result cached for about 15 minutes. If OpenWeather does not answer, the API returns a **real saved forecast** from `data/sources/raw/` with `isOffline: true`, and the screen says "Last forecast from <fetchedAt>, offline".
-- **API key:** only in the backend, in user-secrets (`OpenWeather:ApiKey`). Never in `appsettings.json` or any committed file.
+- **Never breaks on stage:** 3-second timeout, result cached for about 15 minutes. If OpenWeather does not answer (or there is no key), the API returns a **real saved forecast** (`data/sources/raw/openweather_forecast_-20.25_57.55.json`) with `isOffline: true`, and the screen says "Last saved forecast from <time> (offline)".
+- **API key:** only in the backend: user-secrets locally (`OpenWeather:ApiKey`), or the app setting `OpenWeather__ApiKey` on Azure. Never in `appsettings.json` or any committed file.
+- If there is no live forecast **and** no saved forecast, the endpoint returns **503** with a ProblemDetails message.
 
 ---
 
@@ -366,15 +368,16 @@ public record OutlookResponse(string Level, decimal MaxWindKmh, decimal MaxGustK
 | 13 | With solar the home is billed on **prosumer tariff 150A/150B** (GN 473/2026): flat Rs 8.58 up to 300 kWh total use, bands above, minimum charge by total use; CST only above 500 kWh, labelled pending URA approval | Solar response | ✅ Merged (#73 data, #103 bill). Checked: 200 kWh + 3 kWp = Rs 211.60, saving Rs 1,005.15 |
 | 14 | New `exportCreditRs` in `withSolar`, shown separately, **not** counted in savings | Solar response | ✅ Merged (#103) |
 | 15 | New optional `phase` (`"single"` → 150A default, `"three"` → 150B); `tariffCode` only affects the without-solar bill | Solar request | ✅ Merged (#103) |
-| 16 | 🆕 Cyclone mode: `GET /api/cyclone/appliances`, `POST /api/cyclone/backup` | Sections 6–7 | ✅ Merged (#77). Placeholders replaced by sourced values: fridge 35.5 W (#83), battery 97.8% (decision log row 13, backend to set) |
-| 17 | 🆕 `GET /api/cyclone/outlook`: OpenWeather wind → battery advice (`ok` / `charge` / `chargeNow`, Beaufort on sustained wind), offline fallback | Section 8 | 🔄 Agreed, only if done before the freeze |
+| 16 | 🆕 Cyclone mode: `GET /api/cyclone/appliances`, `POST /api/cyclone/backup` | Sections 6–7 | ✅ Merged (#77). Sourced values: fridge 35.5 W (#83), all appliances read from `cyclone_appliances.csv` (#112), battery 97.8% (#115, decision log row 13) |
+| 17 | 🆕 `GET /api/cyclone/outlook`: OpenWeather wind → battery advice (`ok` / `charge` / `chargeNow`, Beaufort on sustained wind), offline fallback | Section 8 | ✅ Merged (#121 endpoint, #123 saved forecast, #132 banner on the Cyclone page) |
+| 18 | Website models match the backend (`Phase`, `ExportCreditRs`); Solar page shows the export credit and tariff 150A | Frontend | ✅ Merged (#125) |
+| 19 | Data and the saved forecast are read next to the app when published (Azure), else from the repo | Hosting | ✅ Merged (#151), live on Azure |
 
-## Known gaps (to fix before the demo)
+## Known limits (after the freeze)
 
-| Gap | Owner |
+| Limit | Note |
 |---|---|
-| Website models (`ApiModels.cs`) don't have `Phase` and `ExportCreditRs` yet, so the Solar page can't show the export credit. | Frontend Lead |
-| No demo readings in `data/seed/`, so the Readings page starts empty. | Data Lead |
-| Cyclone: the fridge (from an EEMO energy label of a fridge sold in Mauritius) and usable battery % (datasheet of a 5 kWh battery sold in Mauritius) need sources; the other appliance watts need a source line each. | Data Lead |
-| Cyclone outlook: OpenWeather API key (user-secrets on the demo laptop) and a real saved forecast in `data/sources/raw/`. | Backend Lead |
-| The website still uses fake data: `"UseMockApi": true` in `frontend/PowerCheck.Web/appsettings.json`. Set it to `false` and test every page against the real API before the demo. | Frontend Lead |
+| Readings are one shared list | No login in the MVP. Login per household is a future idea. |
+| Three-phase homes | The API supports `phase: "three"` (tariff 150B); the website assumes single-phase. |
+| Live wind data needs a key | Without `OpenWeather:ApiKey` the outlook uses the saved real forecast (`isOffline: true`). |
+| CST above 500 kWh | Shown as "pending URA approval", as in the CEB leaflet. |
