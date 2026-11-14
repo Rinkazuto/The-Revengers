@@ -1,6 +1,238 @@
 ﻿@page "/cyclone"
+@using System.Globalization
+@inject IPowerCheckApi Api
 
 <PageTitle>Cyclone: ReVolt</PageTitle>
 
-<MudText Typo="Typo.h5" GutterBottom="true">Cyclone mode</MudText>
-<MudText>How long will your battery keep you going? Coming soon.</MudText>
+<MudText Typo="Typo.h5">Cyclone mode</MudText>
+<MudText Typo="Typo.body2" Class="mb-4">How long will your battery keep you going?</MudText>
+
+@* Optional: ONE Kreol line here, written/checked by a native speaker (team decision: no EN/KR switch). *@
+
+@if (_loadingAppliances)
+{
+    <div class="d-flex justify-center my-8">
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    </div>
+}
+else if (_loadError is not null)
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4">@_loadError</MudAlert>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Class="tap-48" OnClick="LoadAppliancesAsync">
+        Try again
+    </MudButton>
+}
+else
+{
+    @* ---------- Your battery ---------- *@
+    <div class="card-tint mb-3 d-flex justify-space-between align-center">
+        <MudText>Your battery</MudText>
+        <MudNumericField T="decimal?" Value="_batteryKwh" ValueChanged="OnBatteryChangedAsync"
+                         Adornment="Adornment.End" AdornmentText="kWh"
+                                                  HideSpinButtons="true" InputMode="InputMode.@decimal"
+                         Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width: 120px;" />
+    </div>
+    @if (_batteryError is not null)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@_batteryError</MudAlert>
+    }
+
+    @* ---------- Keep running: appliances, watts, hours a day ---------- *@
+    <div class="card-tint mb-3">
+        <div class="d-flex justify-space-between mb-1">
+            <MudText Typo="Typo.body2"><b>Keep running</b></MudText>
+            <MudText Typo="Typo.caption">watts · hours a day</MudText>
+        </div>
+
+        @foreach (var row in _rows)
+        {
+            <div class="appliance-row d-flex align-center">
+                <MudCheckBox T="bool" Value="row.Selected" ValueChanged="@(value => OnSelectedChangedAsync(row, value))"
+                             Color="Color.Primary" Label="@row.Appliance.Name" Class="flex-grow-1" />
+                <MudText Typo="Typo.caption">@Watts(row.Appliance.Watts) W</MudText>
+                <MudSelect T="decimal" Value="row.Hours" ValueChanged="@(hours => OnHoursChangedAsync(row, hours))"
+                           Disabled="!row.Selected" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           AnchorOrigin="Origin.BottomCenter" Style="max-width: 90px;">
+                    @foreach (var hours in HourOptions)
+                    {
+                        <MudSelectItem T="decimal" Value="@hours">@hours h</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+        }
+    </div>
+
+    @* ---------- Result ---------- *@
+    @if (!AnySelected)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-3">Tick at least one appliance to keep running.</MudAlert>
+    }
+    else if (_calcError is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@_calcError</MudAlert>
+    }
+    else if (_result is not null)
+    {
+        <div class="card-dark mb-3">
+            @if (_calculating)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Secondary" Class="mb-2" />
+            }
+            <MudText Typo="Typo.h4" Class="highlight">@BigText(_result.HoursCovered)</MudText>
+            <MudText>Uses @Kwh(_result.KwhPerDay) kWh a day</MudText>
+            <MudText Typo="Typo.body2" Class="mt-2">@_result.Message</MudText>
+        </div>
+
+        @* ---------- Where the numbers come from (includes "check MMS") ---------- *@
+        <MudExpansionPanels Elevation="1" Class="mb-4">
+            <MudExpansionPanel Text="How we worked this out">
+                @foreach (var assumption in _result.Assumptions)
+                {
+                    <MudText Typo="Typo.body2" Class="mb-2">• @assumption</MudText>
+                }
+                @foreach (var row in _rows.Where(r => r.Selected))
+                {
+                    <MudText Typo="Typo.caption" Class="d-block mb-1">
+                        @row.Appliance.Name: @Watts(row.Appliance.Watts) W (@row.Appliance.Source)
+                    </MudText>
+                }
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    }
+}
+
+@code {
+    private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+
+    // Hours a day the user can pick (easy taps instead of typing)
+    private static readonly decimal[] HourOptions = [1m, 2m, 3m, 4m, 6m, 8m, 12m, 24m];
+
+    // Starting choices: fridge, Wi-Fi and one LED ticked (like the wireframe and QA case CY-03).
+    // Hours for the others come from the QA cases (TV 4 h, laptop 4 h, fan 8 h, charger 2 h).
+    private static readonly Dictionary<string, (bool Selected, decimal Hours)> Defaults = new()
+    {
+        ["fridge"] = (true, 24m),
+        ["wifi_router"] = (true, 24m),
+        ["led_light"] = (true, 6m),
+        ["ceiling_fan"] = (false, 8m),
+        ["tv"] = (false, 4m),
+        ["laptop"] = (false, 4m),
+        ["phone_charger"] = (false, 2m),
+    };
+
+    private class ApplianceRow
+    {
+        public required ApplianceDto Appliance { get; init; }
+        public bool Selected { get; set; }
+        public decimal Hours { get; set; }
+    }
+
+    private List<ApplianceRow> _rows = new();
+    private bool _loadingAppliances;
+    private string? _loadError;
+
+    private decimal? _batteryKwh = 5m;   // the battery in CEB's price guide
+    private string? _batteryError;
+
+    private BackupResponse? _result;
+    private bool _calculating;
+    private string? _calcError;
+    private int _requestNumber;   // only the newest answer is shown, if the user taps quickly
+
+    protected override async Task OnInitializedAsync() => await LoadAppliancesAsync();
+
+    private async Task LoadAppliancesAsync()
+    {
+        _loadingAppliances = true;
+        _loadError = null;
+        try
+        {
+            var response = await Api.GetAppliancesAsync();
+            _rows = response.Appliances
+                .Select(a => new ApplianceRow
+                {
+                    Appliance = a,
+                    Selected = Defaults.TryGetValue(a.Id, out var d) && d.Selected,
+                    Hours = Defaults.TryGetValue(a.Id, out var h) ? h.Hours : 4m,
+                })
+                .ToList();
+        }
+        catch (ApiException ex)
+        {
+            _loadError = ex.Message;
+        }
+        finally
+        {
+            _loadingAppliances = false;
+        }
+
+        if (_loadError is null) await RecalculateAsync();
+    }
+
+    private async Task OnSelectedChangedAsync(ApplianceRow row, bool selected)
+    {
+        row.Selected = selected;
+        await RecalculateAsync();
+    }
+
+    private async Task OnHoursChangedAsync(ApplianceRow row, decimal hours)
+    {
+        row.Hours = hours;
+        await RecalculateAsync();
+    }
+
+    private async Task OnBatteryChangedAsync(decimal? kwh)
+    {
+        _batteryKwh = kwh;
+        await RecalculateAsync();
+    }
+
+    private bool AnySelected => _rows.Any(r => r.Selected && r.Hours > 0);
+
+    private async Task RecalculateAsync()
+    {
+        _calcError = null;
+
+        if (_batteryKwh is null || _batteryKwh <= 0 || _batteryKwh > 50)
+        {
+            _batteryError = "Enter a battery size above 0 and up to 50 kWh.";
+            return;
+        }
+        _batteryError = null;
+
+        var chosen = _rows
+            .Where(r => r.Selected && r.Hours > 0)
+            .Select(r => new BackupApplianceRequest(r.Appliance.Id, r.Hours))
+            .ToList();
+        if (chosen.Count == 0)
+        {
+            _result = null;
+            return;
+        }
+
+        var myNumber = ++_requestNumber;
+        _calculating = true;
+        try
+        {
+            var result = await Api.CalculateBackupAsync(new BackupRequest(chosen, _batteryKwh));
+            if (myNumber == _requestNumber) _result = result;
+        }
+        catch (ApiException ex)
+        {
+            if (myNumber == _requestNumber) _calcError = ex.Message;
+        }
+        finally
+        {
+            if (myNumber == _requestNumber) _calculating = false;
+        }
+    }
+
+    // Same wording as the backend's message: "up to about"
+    private static string BigText(decimal hours) =>
+        hours >= 24 * 30 ? "More than a month"
+        : hours >= 48 ? $"Up to about {(hours / 24).ToString("0.#", Inv)} days"
+        : $"Up to about {hours.ToString("0.#", Inv)} hours";
+
+    private static string Watts(decimal value) => value.ToString("0.#", Inv);   // 35.5023 → "35.5"
+    private static string Kwh(decimal value) => value.ToString("0.##", Inv);
+}

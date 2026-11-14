@@ -151,3 +151,9 @@ h1:focus {
     border-radius: 16px;
     padding: 16px;
 }
+
+/* Cyclone: appliance rows at least 48 px high, with space between checkbox, watts and hours */
+.appliance-row {
+    min-height: 56px;
+    gap: 8px;
+}
