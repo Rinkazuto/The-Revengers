@@ -62,17 +62,17 @@ public static class CycloneEndpoints
             var hoursCovered = Math.Round(usableKwh / kwhPerDay * 24, 1, MidpointRounding.AwayFromZero);
 
             var message = hoursCovered >= 24 * 30
-                ? $"Your {batteryKwh:0.##} kWh battery keeps these running for more than a month."
+                ? $"Your {batteryKwh:0.##} kWh battery keeps these running for up to more than a month."
                 : hoursCovered >= 48
-                    ? $"Your {batteryKwh:0.##} kWh battery keeps these running for about {hoursCovered / 24:0.#} days."
-                    : $"Your {batteryKwh:0.##} kWh battery keeps these running for about {hoursCovered:0.#} hours.";
+                    ? $"Your {batteryKwh:0.##} kWh battery keeps these running for up to about {hoursCovered / 24:0.#} days."
+                    : $"Your {batteryKwh:0.##} kWh battery keeps these running for up to about {hoursCovered:0.#} hours.";
 
             // 5. Explain every number (shown on screen)
             var assumptions = new List<string>
             {
                 $"Usable battery: {values.UsableBatteryPercent:0.##}% of {batteryKwh:0.##} kWh = {usableKwh:0.##} kWh ({values.UsableBatterySource}).",
                 $"Battery size: {schemeBattery:0.##} kWh is the battery in CEB's solar price guide, unless you choose another size.",
-                "The battery is full when the power cut starts.",
+                "Assumes a new, fully charged battery. Real time is usually shorter: inverters lose more at small loads, and older batteries hold less.",
                 "We ignore recharging from the panels during the cyclone (heavy cloud), so this is the safe, lower figure.",
                 "Appliance watts are from labels and published tables; your own appliances may use less.",
                 "Without a battery, ordinary rooftop solar switches off when the CEB grid goes down.",

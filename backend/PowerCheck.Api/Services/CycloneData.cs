@@ -45,8 +45,7 @@ public static class CycloneData
 
         var usablePercent = decimal.Parse(efficiency["value"], CultureInfo.InvariantCulture);
         var usableSource =
-            $"{battery["source"]}; {efficiency["source"]}: \"European weighted efficiency {usablePercent:0.##}%\". " +
-            "New battery; older batteries hold less";
+            $"{battery["source"]}; {efficiency["source"]}: \"European weighted efficiency {usablePercent:0.##}%\"";
 
         return new CycloneValues(appliances, usablePercent, usableSource);
     }
