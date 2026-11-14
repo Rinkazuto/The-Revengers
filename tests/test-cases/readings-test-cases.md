@@ -3,7 +3,7 @@
 **Feature:** My readings. Save each month's usage, see the bill for that month and whether usage is going up or down.
 **Endpoints:** `POST /api/readings`, `GET /api/readings`
 **Owner:** Design, QA and Pitch lead
-**Status:** Ready to run (merged into `main`, 14 Nov 2026; checked against `ReadingEndpoints.cs`). ⚠️ The website still has `"UseMockApi": true`, so test through Swagger until the Frontend Lead sets it to `false`.
+**Status:** Ready to run (merged into `main`, 14 Nov 2026; checked against `ReadingEndpoints.cs`). The website uses the real API (`"UseMockApi": false`, #113), so test on the website or in Swagger. Live app: https://revolt-rb.azurewebsites.net
 
 **API test run (14 Nov 2026, `main` at 94c3497, fresh database):** every case checkable through the API **passed** (109 checks across the four files, plus the restart test RD-31). In the Result column, **P (API)** = passed through the API; **API ✓, check on phone** = the numbers passed, and the screen still needs checking. Blank results are phone and screen checks for the phone test run (board #30).
 
