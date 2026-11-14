@@ -10,9 +10,9 @@ public record BillRequest(decimal MonthlyKwh, string? TariffCode = null);
 public record BillLineDto(decimal FromKwh, decimal? ToKwh, decimal Kwh, decimal PricePerKwh, decimal AmountRs);
 public record BillResponse(decimal MonthlyKwh, List<BillLineDto> Lines, decimal MinimumChargeRs, decimal TotalRs, string Source);
 
-public record SolarRequest(decimal MonthlyKwh, decimal? SystemSizeKwp, string? TariffCode = null);
+public record SolarRequest(decimal MonthlyKwh, decimal? SystemSizeKwp, string? TariffCode = null, string? Phase = null);
 public record WithoutSolarDto(decimal MonthlyBillRs);
-public record WithSolarDto(decimal MonthlyGenerationKwh, decimal KwhFromGrid, decimal MonthlyBillRs);
+public record WithSolarDto(decimal MonthlyGenerationKwh, decimal KwhFromGrid, decimal MonthlyBillRs, decimal ExportCreditRs);
 public record ProjectionYearDto(int Year, decimal CumulativeSavingsRs, decimal NetGainRs);
 public record SolarResponse(decimal MonthlyKwh, decimal SystemSizeKwp, WithoutSolarDto WithoutSolar, WithSolarDto WithSolar,
     decimal MonthlySavingsRs, decimal YearlySavingsRs, decimal InstallCostRs, decimal? PaybackYears,
