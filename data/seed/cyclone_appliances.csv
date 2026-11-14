@@ -1,0 +1,2 @@
+appliance_id,name,annual_kwh,daily_kwh_derived,average_watts_derived,example_model,seller,source,read_on
+fridge,Fridge,311,0.8521,35.5023,"Samsung RB29FERNDSA, 290 L, energy class F","Courts Mammouth, Mauritius",https://www.courtsmammouth.mu/product/samsung-rb29ferndsa-refrigerator.html,2026-11-14

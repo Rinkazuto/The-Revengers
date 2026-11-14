@@ -37,20 +37,31 @@ h1:focus {
     text-align: start;
 }
 
+/* Page content: no top bar any more; room at the bottom for the bottom bar */
 .page-content {
-    padding: 72px 16px 88px;
+    padding: 12px 16px 88px;
 }
-/* room for the top and bottom bars */
 
+/* Small "ReVolt" at the top right of every page */
+.brand-header {
+    text-align: right;
+    font-size: 14px;
+    color: var(--mud-palette-text-secondary);
+    margin-bottom: 8px;
+}
+
+/* Bottom bar: always white, fixed at the bottom, 4 equal tabs */
 .bottom-bar {
-    padding: 0;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1100;
+    display: flex;
+    background: var(--mud-palette-surface);
+    border-top: 1px solid var(--mud-palette-lines-default);
+    padding-bottom: env(safe-area-inset-bottom); /* space for the iPhone home bar */
 }
-
-    .bottom-bar .mud-toolbar {
-        width: 100%;
-        padding: 0;
-        justify-content: space-around;
-    }
 
 .bottom-tab {
     flex: 1;
@@ -60,7 +71,7 @@ h1:focus {
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    color: #757575;
+    color: var(--mud-palette-text-secondary);
     text-decoration: none;
 }
 
@@ -77,4 +88,66 @@ h1:focus {
 /* Bill result: space between band rows */
 .band-row {
     margin-bottom: 16px;
+}
+
+/* Readings: simple bar chart (last 6 months) */
+.bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 160px;
+}
+
+.bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.bar {
+    width: 100%;
+    max-width: 40px;
+    border-radius: 6px 6px 0 0;
+    background: var(--mud-palette-primary);
+}
+
+.bar-value, .bar-label {
+    font-size: 12px;
+}
+
+.bar-value {
+    margin-bottom: 4px;
+}
+
+.bar-label {
+    margin-top: 4px;
+    color: var(--mud-palette-text-secondary);
+}
+
+/* Readings list: rows at least 48 px high (Section 6) */
+.reading-row {
+    min-height: 56px;
+}
+
+/* ---------- ReVolt card styles (new wireframes) ---------- */
+
+/* Dark green card: big results ("Rs 1,216.75", "Save Rs X a month", "About X hours") */
+.card-dark {
+    background: var(--mud-palette-tertiary);
+    color: #ffffff;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+    .card-dark .highlight {
+        color: var(--mud-palette-secondary); /* yellow numbers on dark green */
+    }
+
+/* Light green card: inputs and info boxes ("Where to find kWh", "Your battery") */
+.card-tint {
+    background: #EEF6EF;
+    border-radius: 16px;
+    padding: 16px;
 }

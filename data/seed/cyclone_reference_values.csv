@@ -1,0 +1,8 @@
+parameter,value,unit,source,note
+battery_usable_kwh,5,kWh,"Huawei LUNA2000-S1 specs page, LUNA2000-5-E1 module: ""Battery usable energy 5 kWh""",Test conditions 100% depth of discharge; not yet confirmed as sold in Mauritius
+battery_test_depth_of_discharge,100,percent,"Huawei LUNA2000-S1 specs page, test-condition note","""100% depth of discharge (DoD), 0.2C rate charge & discharge at 25 C, at the beginning of service life"""
+beaufort_force_8_min_knots,34,knots,"Met Office, Beaufort wind force scale","Force 8 ""Gale"": 34-40 knots"
+beaufort_force_10_min_knots,48,knots,"Met Office, Beaufort wind force scale","Force 10 ""Storm"": 48-55 knots"
+knot_in_kmh,1.852,km/h per knot,International nautical mile = 1852 m (exact),Used to convert knots to km/h
+beaufort_force_8_min_kmh,62.968,km/h,Derived: 34 knots x 1.852,Lower limit of force 8
+beaufort_force_10_min_kmh,88.896,km/h,Derived: 48 knots x 1.852,Lower limit of force 10
